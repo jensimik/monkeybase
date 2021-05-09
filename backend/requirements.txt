@@ -1,0 +1,26 @@
+pydantic[email,dotenv]
+
+# JWT
+python-jose
+# crypt
+cryptography
+passlib[bcrypt]
+python-multipart
+
+# db
+asyncpg
+psycopg2-binary
+sqlalchemy
+alembic
+
+# requests/client-get
+aiohttp[speedups]
+
+# static files serve
+aiofiles
+
+# extra
+emails
+
+# retry library
+tenacity
