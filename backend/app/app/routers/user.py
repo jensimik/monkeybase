@@ -10,12 +10,21 @@ router = APIRouter()
 
 @router.get("/me", response_model=schemas.User)
 async def read_user_me(
-    current_user: models.User = Security(deps.get_current_user, scopes=["basic"]),
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+    db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Get current user.
     """
-    return current_user
+    return await crud.user.get(
+        db,
+        id=user_id,
+        options=[
+            sa.orm.subqueryload(models.User.member).subqueryload(
+                models.Member.member_type
+            )
+        ],
+    )
 
 
 @router.put("/me", response_model=schemas.User)
