@@ -31,15 +31,26 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *args,
         skip: int = 0,
         limit: int = 100,
+        join: list = [],
+        options: list = [],
         order_by: Optional[sa.sql.elements.UnaryExpression] = None,
     ) -> List[ModelType]:
-        query = (
-            sa.select(self.model)
-            .where(self.model.active == True, *args)
-            .order_by(order_by)
-            .offset(skip)
-            .limit(limit)
-        )
+        query = sa.select(self.model)
+        if join:
+            query = query.join(*join)
+        query = query.where(self.model.active == True, *args)
+        if options:
+            query = query.options(*options)
+        query = query.order_by(order_by).offset(skip).limit(limit)
+        # query = query.order
+        #     sa.select(self.model)
+        #     .join(*join)
+        #     .where(self.model.active == True, *args)
+        #     .options(*options)
+        #     .order_by(order_by)
+        #     .offset(skip)
+        #     .limit(limit)
+        # )
         return (await db.execute(query)).scalars().all()
 
     async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:

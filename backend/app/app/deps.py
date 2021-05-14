@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
 from pydantic import ValidationError
+from typing import AsyncIterator
 from app import schemas
 from app.core import security
 from app.core.config import settings
@@ -25,12 +26,12 @@ reusable_oauth2 = OAuth2PasswordBearer(
 )
 
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncIterator[AsyncSession]:
     async with async_session() as session:
         yield session
 
 
-async def get_http_session() -> aiohttp.ClientSession:
+async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
     async with aiohttp.ClientSession() as session:
         yield session
 
@@ -41,7 +42,7 @@ async def get_current_user_id(
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
     else:
-        authenticate_value = f"Bearer"
+        authenticate_value = "Bearer"
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -61,7 +62,7 @@ async def get_current_user_id(
                 detail="Not enough permissions",
                 headers={"WWW-Authenticate": authenticate_value},
             )
-    return token_data.sub
+    return int(token_data.sub)
 
 
 async def get_current_user(
@@ -74,23 +75,23 @@ async def get_current_user(
     return user
 
 
-async def get_current_active_user(
-    user: schemas.User = Depends(get_current_user),
-) -> User:
-    if not user.active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="user not active",
-        )
-    return user
+# async def get_current_active_user(
+#     user: schemas.User = Depends(get_current_user),
+# ) -> User:
+#     if not user.active:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="user not active",
+#         )
+#     return user
 
 
-async def get_current_admin_user(
-    user: schemas.User = Depends(get_current_active_user),
-) -> User:
-    if "admin" not in user.permissions:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="user not admin",
-        )
-    return user
+# async def get_current_admin_user(
+#     user: schemas.User = Depends(get_current_active_user),
+# ) -> User:
+#     if "admin" not in user.permissions:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="user not admin",
+#         )
+#     return user

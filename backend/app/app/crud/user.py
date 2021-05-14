@@ -3,7 +3,6 @@ from app.models import User
 from app.schemas import UserCreate, UserUpdate
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import User
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):

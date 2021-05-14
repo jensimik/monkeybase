@@ -24,3 +24,6 @@ emails
 
 # retry library
 tenacity
+
+# sane logging
+loguru

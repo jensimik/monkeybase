@@ -9,8 +9,6 @@ class UserBase(BaseModel):
     active: Optional[bool] = True
     name: Optional[str] = None
     birthday: Optional[date] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
 
 
 # Properties to receive via API on creation
@@ -32,6 +30,8 @@ class UserUpdateMe(BaseModel):
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True

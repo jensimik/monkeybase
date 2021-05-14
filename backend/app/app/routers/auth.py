@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, security
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import schemas, deps, crud
@@ -32,13 +32,11 @@ async def login_access_token(
     elif not user.active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return {
-        "access_token": create_access_token(
-            data={"sub": user.username, "scopes": form_data.scopes},
-            expires_delta=access_token_expires,
-        ),
-        "token_type": "bearer",
-    }
+    access_token = create_access_token(
+        data={"sub": str(user.id), "scopes": form_data.scopes},
+        expires_delta=access_token_expires,
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)

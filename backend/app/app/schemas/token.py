@@ -8,5 +8,5 @@ class Token(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: int
+    sub: str
     scopes: List[str] = []

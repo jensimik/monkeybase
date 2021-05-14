@@ -1,0 +1,4 @@
+pytest
+
+# generate fake fixtures data
+faker
