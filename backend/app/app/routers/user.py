@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 from typing import List, Any
+from loguru import logger
 from app import deps, schemas, models, crud
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, Security
@@ -36,18 +37,25 @@ async def update_user_me(
         # raise exc.DuplicatedEntryError("The city is already stored")
 
 
-@router.get("", response_model=List[schemas.User])
+@router.get("", response_model=schemas.Page[schemas.User])
 async def user_list(
+    l_qp: deps.ListQP = Depends(deps.ListQP),
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
-    limit: int = 100,
-    skip: int = 0,
 ) -> Any:
     """
     Get list of all active users
     """
-    return await crud.user.get_multi(
-        db, order_by=models.User.name.asc(), skip=skip, limit=limit
+    return await crud.user.get_multi_page(
+        db,
+        options=[
+            sa.orm.subqueryload(models.User.member).subqueryload(
+                models.Member.member_type
+            )
+        ],
+        page=l_qp.page,
+        per_page=l_qp.per_page,
+        order_by=[models.User.name.asc(), models.User.id.asc()],
     )
 
 
@@ -60,25 +68,33 @@ async def read_user_by_id(
     """
     Get a specific user by id.
     """
-    return await crud.user.get(db, id=user_id)
+    return await crud.user.get(
+        db,
+        id=user_id,
+        options=[
+            sa.orm.subqueryload(models.User.member).subqueryload(
+                models.Member.member_type
+            )
+        ],
+    )
 
 
-@router.get("/{user_id}/member", response_model=List[schemas.Member])
+@router.get("/{user_id}/member", response_model=schemas.Page[schemas.MemberMemberType])
 async def member_list(
     user_id: int,
+    l_qp: deps.ListQP = Depends(deps.ListQP),
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
-    limit: int = 100,
-    skip: int = 0,
 ) -> Any:
     """
     Get list of all memberships for a specific user
     """
-    return await crud.member.get_multi(
+    return await crud.member.get_multi_page(
         db,
         (models.Member.user_id == user_id),
-        options=sa.orm.joinedload(models.Member.user),
-        order_by=models.User.name.asc(),
-        skip=skip,
-        limit=limit,
+        join=[models.Member.member_type],
+        options=[sa.orm.contains_eager(models.Member.member_type)],
+        page=l_qp.page,
+        per_page=l_qp.per_page,
+        order_by=[models.MemberType.name.asc(), models.MemberType.id.asc()],
     )

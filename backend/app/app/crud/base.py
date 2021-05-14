@@ -3,6 +3,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from .utils import select_page
 
 from app.db import Base
 
@@ -21,37 +22,63 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model = model
 
-    async def get(self, db: AsyncSession, id: Any) -> Optional[ModelType]:
+    async def get(
+        self, db: AsyncSession, id: Any, options: List[Any] = []
+    ) -> Optional[ModelType]:
         query = sa.select(self.model).where(self.model.id == id)
+        if options:
+            query = query.options(*options)
         return (await db.execute(query)).scalar_one_or_none()
 
-    async def get_multi(
+    def _get_multi_sql(
         self,
-        db: AsyncSession,
         *args,
-        skip: int = 0,
-        limit: int = 100,
-        join: list = [],
-        options: list = [],
-        order_by: Optional[sa.sql.elements.UnaryExpression] = None,
-    ) -> List[ModelType]:
+        join: List = [],
+        options: List = [],
+        order_by: List[sa.sql.elements.UnaryExpression] = [],
+    ):
         query = sa.select(self.model)
         if join:
             query = query.join(*join)
         query = query.where(self.model.active == True, *args)
         if options:
             query = query.options(*options)
-        query = query.order_by(order_by).offset(skip).limit(limit)
-        # query = query.order
-        #     sa.select(self.model)
-        #     .join(*join)
-        #     .where(self.model.active == True, *args)
-        #     .options(*options)
-        #     .order_by(order_by)
-        #     .offset(skip)
-        #     .limit(limit)
-        # )
+        if order_by:
+            query = query.order_by(*order_by)
+        return query
+
+    async def get_multi(
+        self,
+        db: AsyncSession,
+        *args,
+        join: List[Any] = [],
+        options: List[Any] = [],
+        order_by: List[sa.sql.elements.UnaryExpression] = [],
+    ) -> List[ModelType]:
+        query = self._get_multi_sql(
+            *args, join=join, options=options, order_by=order_by
+        )
         return (await db.execute(query)).scalars().all()
+
+    async def get_multi_page(
+        self,
+        db: AsyncSession,
+        *args,
+        join: List[Any] = [],
+        options: List[Any] = [],
+        per_page: int = 100,
+        page: str = None,
+        order_by: List[sa.sql.elements.UnaryExpression] = [],
+    ) -> List[ModelType]:
+        query = self._get_multi_sql(
+            *args, join=join, options=options, order_by=order_by
+        )
+        items = await select_page(db, query, page=page, per_page=per_page)
+        return {
+            "items": items,
+            "next": items.paging.bookmark_next if items.paging.has_next else "",
+            "has_next": items.paging.has_next,
+        }
 
     async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)

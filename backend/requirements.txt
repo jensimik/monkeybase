@@ -12,6 +12,7 @@ asyncpg
 psycopg2-binary
 sqlalchemy
 alembic
+sqlakeyset
 
 # requests/client-get
 aiohttp[speedups]

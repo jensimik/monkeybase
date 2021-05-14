@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
 from pydantic import ValidationError
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 from app import schemas
 from app.core import security
 from app.core.config import settings
@@ -75,23 +75,8 @@ async def get_current_user(
     return user
 
 
-# async def get_current_active_user(
-#     user: schemas.User = Depends(get_current_user),
-# ) -> User:
-#     if not user.active:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="user not active",
-#         )
-#     return user
-
-
-# async def get_current_admin_user(
-#     user: schemas.User = Depends(get_current_active_user),
-# ) -> User:
-#     if "admin" not in user.permissions:
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="user not admin",
-#         )
-#     return user
+class ListQP:
+    def __init__(self, q: Optional[str] = None, page: str = None, per_page: int = 100):
+        self.q = q
+        self.page = page
+        self.per_page = per_page

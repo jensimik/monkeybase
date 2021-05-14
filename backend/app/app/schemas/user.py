@@ -1,7 +1,6 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
 from pydantic import BaseModel, EmailStr
-
 
 # Shared properties
 class UserBase(BaseModel):
@@ -39,9 +38,14 @@ class UserInDBBase(UserBase):
 
 # Additional properties to return via API
 class User(UserInDBBase):
-    pass
+    member: "List[MemberMemberType]" = []
 
 
 # Additional properties stored in DB
 class UserInDB(UserInDBBase):
     hashed_password: str
+
+
+from .member import MemberMemberType
+
+User.update_forward_refs()

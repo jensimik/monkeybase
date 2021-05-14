@@ -7,5 +7,12 @@ from .member_type import (
     MemberTypeInDB,
     MemberTypeUpdate,
 )
-from .member import Member, MemberCreate, MemberInDB, MemberUpdate
-from .utils import Page
+from .member import (
+    Member,
+    MemberUser,
+    MemberMemberType,
+    MemberCreate,
+    MemberInDB,
+    MemberUpdate,
+)
+from .page import Page
