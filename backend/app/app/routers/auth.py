@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Any, Optional
-from fastapi import APIRouter, Body, Depends, HTTPException, security
+from fastapi import APIRouter, Body, Depends, HTTPException, security, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from app import schemas, deps, crud
 from app.core.config import settings
@@ -40,7 +40,10 @@ async def login_access_token(
 
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
-async def recover_password(email: str, db: AsyncSession = Depends(deps.get_db)) -> Any:
+async def recover_password(
+    email: str = Path(..., title="the email address to recover email from"),
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
     """
     Password Recovery
     """

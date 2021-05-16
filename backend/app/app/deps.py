@@ -1,8 +1,8 @@
 import aiohttp
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
-from pydantic import ValidationError
+from pydantic import ValidationError, Field
 from typing import AsyncIterator, Optional
 from app import schemas
 from app.core import security
@@ -75,8 +75,29 @@ async def get_current_user(
     return user
 
 
-class ListQP:
-    def __init__(self, q: Optional[str] = None, page: str = None, per_page: int = 100):
+class Paging:
+    def __init__(
+        self,
+        q: Optional[str] = Query(None, description="search string"),
+        page: Optional[str] = Query(
+            None,
+            description="page keyset to fetch, empty/undefined for first page",
+        ),
+        per_page: Optional[int] = Query(
+            100,
+            description="rows to fetch per page",
+            ge=1,
+            le=10000,
+        ),
+    ):
         self.q = q
         self.page = page
         self.per_page = per_page
+
+
+class Q:
+    def __init__(
+        self,
+        q: Optional[str] = Query(None, description="search string"),
+    ):
+        self.q = q

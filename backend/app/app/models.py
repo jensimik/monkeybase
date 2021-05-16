@@ -39,6 +39,7 @@ class User(TimestampableMixin, Base):
     email = sa.Column(
         sa.String, nullable=False, index=True, unique=True, doc="email of user required"
     )
+    email_opt_in = sa.Column(sa.Boolean, nullable=False, default=True)
     hashed_password = sa.Column(sa.String, nullable=False)
     birthday = sa.Column(sa.Date, nullable=False)
     scopes = sa.Column(sa.String, default="basic", nullable=False)

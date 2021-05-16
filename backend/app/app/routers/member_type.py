@@ -23,7 +23,7 @@ async def create_member_type(
 
 @router.get("", response_model=schemas.Page[schemas.MemberType])
 async def member_type_list(
-    l_qp: deps.ListQP = Depends(deps.ListQP),
+    paging: deps.Paging = Depends(deps.Paging),
     _: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
@@ -33,8 +33,8 @@ async def member_type_list(
     return await crud.member_type.get_multi_page(
         db,
         (models.MemberType.open_public == True),
-        per_page=l_qp.per_page,
-        page=l_qp.page,
+        per_page=paging.per_page,
+        page=paging.page,
         order_by=[models.MemberType.name.asc()],
     )
 
@@ -42,19 +42,31 @@ async def member_type_list(
 @router.get("/{member_type_id}/member", response_model=schemas.Page[schemas.MemberUser])
 async def member_list(
     member_type_id: int,
-    l_qp: deps.ListQP = Depends(deps.ListQP),
+    paging: deps.Paging = Depends(deps.Paging),
+    q: deps.Q = Depends(deps.Q),
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Get list of all member for this membership_type
     """
+    args = (
+        [
+            sa.or_(
+                sa.func.lower(models.User.name).contains(q.q.lower(), autoescape=True),
+                sa.func.lower(models.User.email).contains(q.q.lower(), autoescape=True),
+            )
+        ]
+        if q.q
+        else []
+    )
     return await crud.member.get_multi_page(
         db,
         (models.Member.member_type_id == member_type_id),
         join=[models.Member.user],
+        *args,
         options=[sa.orm.contains_eager(models.Member.user)],
-        per_page=l_qp.per_page,
-        page=l_qp.page,
+        per_page=paging.per_page,
+        page=paging.page,
         order_by=[models.User.name.asc()],
     )

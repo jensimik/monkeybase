@@ -48,22 +48,35 @@ async def update_user_me(
 
 @router.get("", response_model=schemas.Page[schemas.User])
 async def user_list(
-    l_qp: deps.ListQP = Depends(deps.ListQP),
+    paging: deps.Paging = Depends(deps.Paging),
+    q: deps.Q = Depends(deps.Q),
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Get list of all active users
     """
+    # search query if searching with q parameter
+    args = (
+        [
+            sa.or_(
+                sa.func.lower(models.User.name).contains(q.q.lower(), autoescape=True),
+                sa.func.lower(models.User.email).contains(q.q.lower(), autoescape=True),
+            )
+        ]
+        if q.q
+        else []
+    )
     return await crud.user.get_multi_page(
         db,
         options=[
-            sa.orm.subqueryload(models.User.member).subqueryload(
+            sa.orm.selectinload(models.User.member).selectinload(
                 models.Member.member_type
             )
         ],
-        page=l_qp.page,
-        per_page=l_qp.per_page,
+        *args,
+        page=paging.page,
+        per_page=paging.per_page,
         order_by=[models.User.name.asc(), models.User.id.asc()],
     )
 
@@ -91,7 +104,7 @@ async def read_user_by_id(
 @router.get("/{user_id}/member", response_model=schemas.Page[schemas.MemberMemberType])
 async def member_list(
     user_id: int,
-    l_qp: deps.ListQP = Depends(deps.ListQP),
+    paging: deps.Paging = Depends(deps.Paging),
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
@@ -103,7 +116,7 @@ async def member_list(
         (models.Member.user_id == user_id),
         join=[models.Member.member_type],
         options=[sa.orm.contains_eager(models.Member.member_type)],
-        page=l_qp.page,
-        per_page=l_qp.per_page,
+        page=paging.page,
+        per_page=paging.per_page,
         order_by=[models.MemberType.name.asc(), models.MemberType.id.asc()],
     )

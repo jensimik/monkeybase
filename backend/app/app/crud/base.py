@@ -33,9 +33,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def _get_multi_sql(
         self,
         *args,
-        join: List = [],
-        options: List = [],
-        order_by: List[sa.sql.elements.UnaryExpression] = [],
+        join: Optional[List] = [],
+        options: Optional[List] = [],
+        order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
     ):
         query = sa.select(self.model)
         if join:
@@ -45,15 +45,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.options(*options)
         if order_by:
             query = query.order_by(*order_by)
+        else:
+            # multi should always be ordered for keyset pagination to work
+            query = query.order_by(self.model.id.asc())
         return query
 
     async def get_multi(
         self,
         db: AsyncSession,
         *args,
-        join: List[Any] = [],
-        options: List[Any] = [],
-        order_by: List[sa.sql.elements.UnaryExpression] = [],
+        join: Optional[List[Any]] = [],
+        options: Optional[List[Any]] = [],
+        order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
     ) -> List[ModelType]:
         query = self._get_multi_sql(
             *args, join=join, options=options, order_by=order_by
@@ -64,11 +67,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self,
         db: AsyncSession,
         *args,
-        join: List[Any] = [],
-        options: List[Any] = [],
-        per_page: int = 100,
-        page: str = None,
-        order_by: List[sa.sql.elements.UnaryExpression] = [],
+        join: Optional[List[Any]] = [],
+        options: Optional[List[Any]] = [],
+        per_page: Optional[int] = 100,
+        page: Optional[str] = None,
+        order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
     ) -> List[ModelType]:
         query = self._get_multi_sql(
             *args, join=join, options=options, order_by=order_by
