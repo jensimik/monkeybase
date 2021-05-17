@@ -6,6 +6,8 @@ python-jose
 cryptography
 passlib[bcrypt]
 python-multipart
+# fido lib from yubico
+fido2
 
 # db
 asyncpg

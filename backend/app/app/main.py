@@ -3,11 +3,12 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.custom_swagger import get_swagger_ui_html
+from fastapi.staticfiles import StaticFiles
 
 from .routers import auth
 from .routers import user
 from .routers import member_type
-
+from .routers import webauthn
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 
@@ -38,6 +39,8 @@ async def root():
     return {"message": "go away, nothing to see here"}
 
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn-2fa"])
 app.include_router(user.router, prefix="/user", tags=["user"])
 app.include_router(member_type.router, prefix="/member_type", tags=["member"])

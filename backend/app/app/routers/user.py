@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 from typing import List, Any
+from uuid import UUID
 from loguru import logger
 from app import deps, schemas, models, crud
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +19,7 @@ async def read_user_me(
     """
     return await crud.user.get(
         db,
-        id=user_id,
+        models.User.id == user_id,
         options=[
             sa.orm.subqueryload(models.User.member).subqueryload(
                 models.Member.member_type
@@ -81,9 +82,9 @@ async def user_list(
     )
 
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get("/{uuid}", response_model=schemas.User)
 async def read_user_by_id(
-    user_id: int,
+    uuid: UUID,
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
@@ -92,7 +93,7 @@ async def read_user_by_id(
     """
     return await crud.user.get(
         db,
-        id=user_id,
+        models.User.uuid == uuid,
         options=[
             sa.orm.subqueryload(models.User.member).subqueryload(
                 models.Member.member_type

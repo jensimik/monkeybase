@@ -1,10 +1,11 @@
-import logging
+from loguru import logger
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
 import emails
 from emails.template import JinjaTemplate
 from jose import jwt
+from app import models
 from app.core.config import settings
 
 
@@ -103,4 +104,29 @@ def verify_password_reset_token(token: str) -> Optional[str]:
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         return decoded_token["sub"]
     except jwt.JWTError:
+        return None
+
+
+def generate_webauthn_state_token(state: dict, user: models.User) -> str:
+    _state = state.copy()
+    _state["user_id"] = user.id
+    delta = timedelta(minutes=5)
+    now = datetime.utcnow()
+    expires = now + delta
+    exp = expires.timestamp()
+    _state.update({"exp": exp})
+    encoded_jwt = jwt.encode(
+        _state,
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
+    return encoded_jwt
+
+
+def verify_webauthn_staten_token(token: str) -> Optional[str]:
+    try:
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return decoded_token
+    except jwt.JWTError as ex:
+        logger.info(ex)
         return None

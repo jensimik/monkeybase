@@ -1,30 +1,7 @@
-import datetime as dt
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql as sa_pg
 from app.db import Base
-from sqlalchemy.sql import expression
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.types import DateTime
-
-
-class utcnow(expression.FunctionElement):
-    type = DateTime()
-
-
-@compiles(utcnow, "postgresql")
-def pg_utcnow(element, compiler, **kw):
-    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
-
-
-class TimestampableMixin:
-    """Allow a model to track its creation and update times"""
-
-    created_at = sa.Column(sa.DateTime, nullable=False, default=utcnow())
-    updated_at = sa.Column(
-        sa.DateTime,
-        nullable=False,
-        server_default=utcnow(),
-        onupdate=utcnow(),
-    )
+from .models_utils import utcnow, gen_uuid, TimestampableMixin
 
 
 class User(TimestampableMixin, Base):
@@ -32,28 +9,41 @@ class User(TimestampableMixin, Base):
 
     __tablename__ = "user"
 
-    id = sa.Column(
-        sa.Integer, sa.Identity(start=1, increment=1), primary_key=True, index=True
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
+    uuid = sa.Column(
+        sa_pg.UUID(as_uuid=True), index=True, unique=True, default=gen_uuid()
     )
     name = sa.Column(sa.String, nullable=False)
-    email = sa.Column(
-        sa.String, nullable=False, index=True, unique=True, doc="email of user required"
-    )
+    email = sa.Column(sa.String, nullable=False, index=True, unique=True)
     email_opt_in = sa.Column(sa.Boolean, nullable=False, default=True)
     hashed_password = sa.Column(sa.String, nullable=False)
     birthday = sa.Column(sa.Date, nullable=False)
     scopes = sa.Column(sa.String, default="basic", nullable=False)
     active = sa.Column(sa.Boolean, nullable=False, default=True)
+    enabled_2fa = sa.Column(sa.Boolean, nullable=False, default=False)
     member = sa.orm.relationship("Member", back_populates="user")
     payment = sa.orm.relationship("Payment", back_populates="user")
+    webauthn = sa.orm.relationship("Webauthn", back_populates="user")
+
+
+class Webauthn(TimestampableMixin, Base):
+    """Model for webauthn credidentials"""
+
+    __tablename__ = "webauthn"
+
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=False)
+    credential = sa.Column(sa.String, nullable=False)
+    credential_id = sa.Column(sa.String, nullable=False, index=True, unique=True)
+    name = sa.Column(sa.String, nullable=False)
+    active = sa.Column(sa.Boolean, default=True)
+    user = sa.orm.relationship("User", back_populates="webauthn")
 
 
 class Member(TimestampableMixin, Base):
     __tablename__ = "member"
 
-    id = sa.Column(
-        sa.Integer, sa.Identity(start=1, increment=1), primary_key=True, index=True
-    )
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
     member_type_id = sa.Column(
         sa.Integer, sa.ForeignKey("member_type.id"), primary_key=True
@@ -87,9 +77,7 @@ class MemberType(TimestampableMixin, Base):
 
     __tablename__ = "member_type"
 
-    id = sa.Column(
-        sa.Integer, sa.Identity(start=1, increment=1), primary_key=True, index=True
-    )
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     name = sa.Column(sa.String, nullable=False)
     slots_available = sa.Column(sa.Integer, default=0, nullable=False)
     open_public = sa.Column(sa.Boolean, default=False, nullable=False)
@@ -121,10 +109,8 @@ class MemberType(TimestampableMixin, Base):
 class Payment(TimestampableMixin, Base):
     __tablename__ = "payment"
 
-    id = sa.Column(
-        sa.Integer, sa.Identity(start=1, increment=1), primary_key=True, index=True
-    )
-    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"))
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=False)
     amount = sa.Column(sa.Numeric, nullable=False)
     paid = sa.Column(sa.Boolean, default=False, nullable=False)
     user = sa.orm.relationship("User", back_populates="payment")

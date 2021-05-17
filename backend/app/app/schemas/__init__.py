@@ -16,3 +16,4 @@ from .member import (
     MemberUpdate,
 )
 from .page import Page
+from .webauthn import Webauthn, WebauthnCreate, WebauthnUpdate

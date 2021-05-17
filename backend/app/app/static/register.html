@@ -1,0 +1,65 @@
+<html>
+
+<head>
+    <title>Fido 2.0 webauthn demo</title>
+    <script src="/static/cbor.js"></script>
+</head>
+
+<body>
+    <h1>register a key to a login</h1>
+
+    <h2>Register a credential</h2>
+    <input type="text" id="username" placeholder="username">
+    <input type="text" id="password" placeholder="password">
+
+    <button onclick="makeCredential()" id="register-button" class="btn btn-lg btn-primary">Register</button>
+
+    <a href="/">Cancel</a>
+
+    <script>
+        function makeCredential() {
+            let formData = new FormData();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+            fetch('/auth/token', {
+                method: 'POST',
+                body: formData
+            }).then(function (response) {
+                response.json().then(function (data) {
+                    fetch('/webauthn/add/begin', {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + data.access_token }
+                    }).then(function (response) {
+                        if (response.ok) return response.arrayBuffer();
+                        throw new Error('Error getting registration data!');
+                    }).then(CBOR.decode).then(function (options) {
+                        console.log(options);
+                        navigator.credentials.create(options)
+                            .then(function (attestation) {
+                                return fetch('/webauthn/add/complete?securitykey_name=bluekey', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/cbor', 'Authorization': 'Bearer ' + data.access_token },
+                                    body: CBOR.encode({
+                                        "attestationObject": new Uint8Array(attestation.response.attestationObject),
+                                        "clientDataJSON": new Uint8Array(attestation.response.clientDataJSON),
+                                    })
+                                });
+                            }).then(function (response) {
+                                var stat = response.ok ? 'successful' : 'unsuccessful';
+                                alert('Registration ' + stat + ' More details in server log...');
+                            }, function (reason) {
+                                alert(reason);
+                            }).then(function () {
+                                window.location = '/static/authenticate.html';
+                            });
+                    });
+                });
+            });
+        }
+
+
+    </script>
+
+</body>
+
+</html>

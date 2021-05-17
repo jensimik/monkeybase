@@ -50,6 +50,10 @@ class Settings(BaseSettings):
             path=f"/{values.get('POSTGRES_DB') or ''}",
         )
 
+    # fido2 stuff
+    WEBAUTHN_RP_ID: str = "monkey.gnerd.dk"
+    WEBAUTHN_RP_NAME: str = "monkey.gnerd.dk"
+
     SMTP_TLS: bool = True
     SMTP_PORT: Optional[int] = None
     SMTP_HOST: Optional[str] = None

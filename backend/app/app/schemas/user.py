@@ -1,9 +1,11 @@
 from typing import Optional, List
+from uuid import UUID
 from datetime import datetime, date
 from pydantic import BaseModel, EmailStr
 
 # Shared properties
 class UserBase(BaseModel):
+    uuid: Optional[UUID] = None
     email: Optional[EmailStr] = None
     active: Optional[bool] = True
     name: Optional[str] = None
@@ -36,8 +38,17 @@ class UserInDBBase(UserBase):
         orm_mode = True
 
 
+# dont show user id in API - only the UUID
+class UserInDBBase2(UserBase):
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
 # Additional properties to return via API
-class User(UserInDBBase):
+class User(UserInDBBase2):
     member: "List[MemberMemberType]" = []
 
 

@@ -1,26 +1,38 @@
+from loguru import logger
 import asyncio
 import sqlalchemy as sa
 import random
 from loguru import logger
 from app.db.base import Base, engine
-from app.models import User, MemberType, Member
+from app.models import User, MemberType, Member, Webauthn
 from app.core.security import get_password_hash
 from faker import Faker
+
+
+async def test():
+    async with engine.begin() as conn:
+        q = sa.select(Webauthn).order_by(Webauthn.id)
+        data = await conn.execute(q)
+        print(data)
+        print(data.scalars().all())
+        print(data)
 
 
 async def seed_data():
     fake = Faker()
     async with engine.begin() as conn:
+        # load uuid extension
+        await conn.execute(sa.text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'))
         q = sa.insert(User).values(
             {
                 "name": "Some Name",
                 "email": "test@test.dk",
                 "birthday": fake.date_of_birth(),
                 "hashed_password": get_password_hash("password"),
+                "scopes": "basic,admin,other",
             }
         )
         await conn.execute(q)
-
         for x in ["Full membership", "Morning membership"]:
             q = sa.insert(MemberType).values(
                 {
@@ -67,4 +79,5 @@ async def init_models():
 
 
 if __name__ == "__main__":
+    # asyncio.run(test())
     asyncio.run(init_models())

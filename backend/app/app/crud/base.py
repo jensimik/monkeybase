@@ -23,9 +23,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     async def get(
-        self, db: AsyncSession, id: Any, options: List[Any] = []
+        self,
+        db: AsyncSession,
+        where,
+        options: List[Any] = [],
+        only_active: Optional[bool] = True,
     ) -> Optional[ModelType]:
-        query = sa.select(self.model).where(self.model.id == id)
+        query = sa.select(self.model).where(where)
+        if only_active:
+            query = query.where(self.model.active == True)
         if options:
             query = query.options(*options)
         return (await db.execute(query)).scalar_one_or_none()
@@ -36,11 +42,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         join: Optional[List] = [],
         options: Optional[List] = [],
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
+        only_active: Optional[bool] = True,
     ):
         query = sa.select(self.model)
         if join:
             query = query.join(*join)
-        query = query.where(self.model.active == True, *args)
+        if only_active:
+            query = query.where(self.model.active == True, *args)
+        else:
+            query = query.where(*args)
         if options:
             query = query.options(*options)
         if order_by:
@@ -57,9 +67,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         join: Optional[List[Any]] = [],
         options: Optional[List[Any]] = [],
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
+        only_active: Optional[bool] = True,
     ) -> List[ModelType]:
         query = self._get_multi_sql(
-            *args, join=join, options=options, order_by=order_by
+            *args,
+            join=join,
+            options=options,
+            order_by=order_by,
+            only_active=only_active,
         )
         return (await db.execute(query)).scalars().all()
 
@@ -72,9 +87,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         per_page: Optional[int] = 100,
         page: Optional[str] = None,
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
+        only_active: Optional[bool] = True,
     ) -> List[ModelType]:
         query = self._get_multi_sql(
-            *args, join=join, options=options, order_by=order_by
+            *args,
+            join=join,
+            options=options,
+            order_by=order_by,
+            only_active=only_active,
         )
         items = await select_page(db, query, page=page, per_page=per_page)
         return {
@@ -84,8 +104,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         }
 
     async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
-        query = sa.insert(self.model).values(**obj_in_data).returning(self.model)
+        # obj_in_data = jsonable_encoder(obj_in)
+        query = (
+            sa.insert(self.model)
+            .values(**obj_in.dict(exclude_unset=True))
+            .returning(self.model)
+        )
         return (await db.execute(query)).scalar_one()
 
     async def update(
@@ -105,6 +129,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.add(db_obj)
         return db_obj
 
-    async def remove(self, db: AsyncSession, id: int) -> ModelType:
-        query = sa.delete(self.model).where(self.model.id == id).returning(self.model)
-        return (await db.execute(query)).scalar_one_or_none()
+    async def remove(self, db: AsyncSession, id: int, actual_delete=False) -> ModelType:
+        if actual_delete:
+            query = (
+                sa.delete(self.model).where(self.model.id == id).returning(self.model)
+            )
+            return (await db.execute(query)).scalar_one_or_none()
+        # just set obj to inactive
+        query = (
+            sa.update(self.model)
+            .where(self.model.id == id)
+            .values({self.model.active: False})
+        )
+        await db.execute(query)
