@@ -1,10 +1,12 @@
 import sqlalchemy as sa
+import looms
+import io
 from typing import List, Any
 from uuid import UUID
 from loguru import logger
 from app import deps, schemas, models, crud
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, Response
 
 router = APIRouter()
 
@@ -100,6 +102,26 @@ async def read_user_by_id(
             )
         ],
     )
+
+
+@router.get("/{uuid}/identicon.png", responses={200: {"content": {"image/png": {}}}})
+async def read_user_by_id_identicon(
+    uuid: UUID,
+    _: int = Security(deps.get_current_user_id, scopes=["basic"]),
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    """
+    Get a identicon for a specific user by id.
+    """
+    user = await crud.user.get(db, models.User.uuid == uuid)
+
+    img = looms.generate(user.uuid.hex)
+    img = img.quantize(method=2)
+
+    with io.BytesIO() as bi:
+        img.save(bi, "png")
+        bi.seek(0)
+        return Response(content=bi.getvalue(), media_type="image/png")
 
 
 @router.get("/{user_id}/member", response_model=schemas.Page[schemas.MemberMemberType])

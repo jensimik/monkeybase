@@ -30,3 +30,6 @@ tenacity
 
 # sane logging
 loguru
+
+# identicon
+looms
