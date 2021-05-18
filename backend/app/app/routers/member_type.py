@@ -65,7 +65,12 @@ async def member_list(
         (models.Member.member_type_id == member_type_id),
         join=[models.Member.user],
         *args,
-        options=[sa.orm.contains_eager(models.Member.user)],
+        options=[
+            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
+            sa.orm.subqueryload(
+                models.Member.member_type.and_(models.MemberType.active == True)
+            ),
+        ],
         per_page=paging.per_page,
         page=paging.page,
         order_by=[models.User.name.asc()],

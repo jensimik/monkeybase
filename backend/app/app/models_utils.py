@@ -12,13 +12,13 @@ def pg_utcnow(element, compiler, **kw):
     return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
 
 
-class gen_uuid(sa.sql.expression.FunctionElement):
-    type = sa_pg.UUID()
+# class gen_uuid(sa.sql.expression.FunctionElement):
+#     type = sa_pg.UUID()
 
 
-@compiles(gen_uuid, "postgresql")
-def pg_uuid(element, compiler, **kw):
-    return "uuid_generate_v4()"
+# @compiles(gen_uuid, "postgresql")
+# def pg_uuid(element, compiler, **kw):
+#     return "uuid_generate_v4()"
 
 
 class TimestampableMixin:

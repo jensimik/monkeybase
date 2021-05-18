@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 from app.db import Base
-from .models_utils import utcnow, gen_uuid, TimestampableMixin
+from .models_utils import utcnow, TimestampableMixin
 
 
 class User(TimestampableMixin, Base):
@@ -10,9 +10,6 @@ class User(TimestampableMixin, Base):
     __tablename__ = "user"
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
-    uuid = sa.Column(
-        sa_pg.UUID(as_uuid=True), index=True, unique=True, default=gen_uuid()
-    )
     name = sa.Column(sa.String, nullable=False)
     email = sa.Column(sa.String, nullable=False, index=True, unique=True)
     email_opt_in = sa.Column(sa.Boolean, nullable=False, default=True)

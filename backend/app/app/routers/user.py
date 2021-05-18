@@ -23,8 +23,10 @@ async def read_user_me(
         db,
         models.User.id == user_id,
         options=[
-            sa.orm.subqueryload(models.User.member).subqueryload(
-                models.Member.member_type
+            sa.orm.subqueryload(
+                models.User.member.and_(models.Member.active == True)
+            ).subqueryload(
+                models.Member.member_type.and_(models.MemberType.active == True)
             )
         ],
     )
@@ -73,8 +75,10 @@ async def user_list(
     return await crud.user.get_multi_page(
         db,
         options=[
-            sa.orm.selectinload(models.User.member).selectinload(
-                models.Member.member_type
+            sa.orm.selectinload(
+                models.User.member.and_(models.Member.active == True)
+            ).selectinload(
+                models.Member.member_type.and_(models.Membertype.active == True)
             )
         ],
         *args,
@@ -84,9 +88,9 @@ async def user_list(
     )
 
 
-@router.get("/{uuid}", response_model=schemas.User)
+@router.get("/{user_id}", response_model=schemas.User)
 async def read_user_by_id(
-    uuid: UUID,
+    user_id: int,
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
@@ -95,27 +99,29 @@ async def read_user_by_id(
     """
     return await crud.user.get(
         db,
-        models.User.uuid == uuid,
+        models.User.id == user_id,
         options=[
-            sa.orm.subqueryload(models.User.member).subqueryload(
-                models.Member.member_type
+            sa.orm.subqueryload(
+                models.User.member.and_(models.Member.active == True)
+            ).subqueryload(
+                models.Member.member_type.and_(models.MemberType.active == True)
             )
         ],
     )
 
 
-@router.get("/{uuid}/identicon.png", responses={200: {"content": {"image/png": {}}}})
+@router.get("/{user_id}/identicon.png", responses={200: {"content": {"image/png": {}}}})
 async def read_user_by_id_identicon(
-    uuid: UUID,
+    user_id: int,
     _: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Get a identicon for a specific user by id.
     """
-    user = await crud.user.get(db, models.User.uuid == uuid)
+    user = await crud.user.get(db, models.User.id == user_id)
 
-    img = looms.generate(user.uuid.hex)
+    img = looms.generate(user.email)
     img = img.quantize(method=2)
 
     with io.BytesIO() as bi:
@@ -138,7 +144,12 @@ async def member_list(
         db,
         (models.Member.user_id == user_id),
         join=[models.Member.member_type],
-        options=[sa.orm.contains_eager(models.Member.member_type)],
+        options=[
+            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
+            sa.orm.subqueryload(
+                models.Member.member_type.and_(models.MemberType.active == True)
+            ),
+        ],
         page=paging.page,
         per_page=paging.per_page,
         order_by=[models.MemberType.name.asc(), models.MemberType.id.asc()],
