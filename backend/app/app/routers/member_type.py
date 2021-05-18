@@ -24,7 +24,7 @@ async def create_member_type(
 @router.get("", response_model=schemas.Page[schemas.MemberType])
 async def member_type_list(
     paging: deps.Paging = Depends(deps.Paging),
-    _: int = Security(deps.get_current_user_id, scopes=["basic"]),
+    # _: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """

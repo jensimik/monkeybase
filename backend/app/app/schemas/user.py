@@ -9,6 +9,7 @@ class UserBase(BaseModel):
     active: Optional[bool] = True
     name: Optional[str] = None
     birthday: Optional[date] = None
+    enabled_2fa: Optional[bool] = None
 
 
 # Properties to receive via API on creation
@@ -26,6 +27,7 @@ class UserUpdateMe(BaseModel):
     email: Optional[EmailStr] = None
     name: Optional[str] = None
     birthday: Optional[date] = None
+    enabled_2fa: Optional[bool] = None
 
 
 class UserInDBBase(UserBase):

@@ -49,7 +49,11 @@ async def login_access_token(
     user = await crud.user.get(
         db,
         (models.User.email == form_data.username),
-        options=[sa.orm.selectinload(models.User.webauthn)],
+        options=[
+            sa.orm.selectinload(
+                models.User.webauthn.and_(models.Webauthn.active == True)
+            )
+        ],
     )
 
     if not user:
@@ -112,7 +116,11 @@ async def login_access_token_with_2fa(
     user = await crud.user.get(
         db,
         (models.User.id == state["user_id"]),
-        options=[sa.orm.selectinload(models.User.webauthn)],
+        options=[
+            sa.orm.selectinload(
+                models.User.webauthn.and_(models.Webauthn.active == True)
+            )
+        ],
     )
 
     if not user:

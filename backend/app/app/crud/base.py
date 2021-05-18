@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+from loguru import logger
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -115,19 +116,33 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def update(
         self,
         db: AsyncSession,
-        db_obj: ModelType,
+        *args,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
+        # multi=False,
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
-        return db_obj
+        upd_dict = (
+            obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
+        )
+        query = (
+            sa.update(self.model)
+            .values(**upd_dict)
+            .where(*args)
+            .execution_options(synchronize_session="fetch")
+        )
+        res = (await db.execute(query)).scalar_one_or_none()
+        logger.info(res)
+        return res
+
+        # obj_data = jsonable_encoder(db_obj)
+        # if isinstance(obj_in, dict):
+        #     update_data = obj_in
+        # else:
+        #     update_data = obj_in.dict(exclude_unset=True)
+        # for field in obj_data:
+        #     if field in update_data:
+        #         setattr(db_obj, field, update_data[field])
+        # db.add(db_obj)
+        # return db_obj
 
     async def remove(self, db: AsyncSession, id: int, actual_delete=False) -> ModelType:
         if actual_delete:

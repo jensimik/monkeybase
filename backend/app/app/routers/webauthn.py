@@ -38,7 +38,11 @@ async def webauthn_add_begin(
     user = await crud.user.get(
         db,
         models.User.id == user_id,
-        options=[sa.orm.subqueryload(models.User.webauthn)],
+        options=[
+            sa.orm.subqueryload(
+                models.User.webauthn.and_(models.Webauthn.active == True)
+            )
+        ],
     )
 
     # calls the library which provides the credential options and a state
@@ -46,7 +50,7 @@ async def webauthn_add_begin(
         {
             # id is a byte sequence as described in
             # https://w3c.github.io/webauthn/#dom-publickeycredentialuserentity-id
-            "id": str(user.uuid).encode("utf-8"),
+            "id": str(user.id).encode("utf-8"),
             # we use the email address here for passwordless login later
             "name": user.email,
             # we don't have any 'real' name to display and therefore this example uses
@@ -138,7 +142,7 @@ async def complete_webauthn(
         ),
     )
     user = await crud.user.get(db, models.User.id == user_id)
-    await crud.user.update(db, user, {"enabled_2fa": True})
+    # await crud.user.update(db, user, {"enabled_2fa": True})
     await db.commit()
 
     # return the response

@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
 from pydantic import ValidationError, Field
 from typing import AsyncIterator, Optional
-from app import schemas
+from app import schemas, models
 from app.core import security
 from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +69,7 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> User:
-    user = await crud.user.get(db, user_id)
+    user = await crud.user.get(db, models.User.id == user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

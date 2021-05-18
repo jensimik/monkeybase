@@ -35,20 +35,19 @@ async def read_user_me(
 @router.put("/me", response_model=schemas.User)
 async def update_user_me(
     update: schemas.UserUpdateMe,
-    current_user: models.User = Security(deps.get_current_user, scopes=["basic"]),
+    current_user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Update own user.
     """
-    user = await crud.user.update(db, db_obj=current_user, obj_in=update)
+    user = await crud.user.update(db, models.User.id == current_user_id, obj_in=update)
     try:
         await db.commit()
         return user
     except sa.exc.IntegrityError as ex:
         await db.rollback()
         raise ex
-        # raise exc.DuplicatedEntryError("The city is already stored")
 
 
 @router.get("", response_model=schemas.Page[schemas.User])

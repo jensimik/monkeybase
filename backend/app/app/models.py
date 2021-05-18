@@ -18,9 +18,9 @@ class User(TimestampableMixin, Base):
     scopes = sa.Column(sa.String, default="basic", nullable=False)
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     enabled_2fa = sa.Column(sa.Boolean, nullable=False, default=False)
-    member = sa.orm.relationship("Member", back_populates="user")
-    payment = sa.orm.relationship("Payment", back_populates="user")
-    webauthn = sa.orm.relationship("Webauthn", back_populates="user")
+    member = sa.orm.relationship("Member", back_populates="user", lazy="noload")
+    payment = sa.orm.relationship("Payment", back_populates="user", lazy="noload")
+    webauthn = sa.orm.relationship("Webauthn", back_populates="user", lazy="noload")
 
 
 class Webauthn(TimestampableMixin, Base):
@@ -34,7 +34,7 @@ class Webauthn(TimestampableMixin, Base):
     credential_id = sa.Column(sa.String, nullable=False, index=True, unique=True)
     name = sa.Column(sa.String, nullable=False)
     active = sa.Column(sa.Boolean, default=True)
-    user = sa.orm.relationship("User", back_populates="webauthn")
+    user = sa.orm.relationship("User", back_populates="webauthn", lazy="noload")
 
 
 class Member(TimestampableMixin, Base):
@@ -48,8 +48,10 @@ class Member(TimestampableMixin, Base):
     date_start = sa.Column(sa.Date, nullable=False)
     date_end = sa.Column(sa.Date, nullable=False)
     active = sa.orm.column_property(date_end > sa.func.now())
-    user = sa.orm.relationship("User", back_populates="member")
-    member_type = sa.orm.relationship("MemberType", back_populates="member")
+    user = sa.orm.relationship("User", back_populates="member", lazy="noload")
+    member_type = sa.orm.relationship(
+        "MemberType", back_populates="member", lazy="noload"
+    )
     # payment_id = sa.Column(sa.Integer, sa.ForeignKey("payment.id"), nullable=False)
     # payment = sa.orm.relationship("Payment")
 
@@ -80,7 +82,7 @@ class MemberType(TimestampableMixin, Base):
     open_public = sa.Column(sa.Boolean, default=False, nullable=False)
     open_waitinglist = sa.Column(sa.Boolean, default=False, nullable=False)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
-    member = sa.orm.relationship("Member", back_populates="member_type")
+    member = sa.orm.relationship("Member", back_populates="member_type", lazy="noload")
 
 
 # class Participant(TimestampableMixin, Base):
@@ -110,7 +112,7 @@ class Payment(TimestampableMixin, Base):
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=False)
     amount = sa.Column(sa.Numeric, nullable=False)
     paid = sa.Column(sa.Boolean, default=False, nullable=False)
-    user = sa.orm.relationship("User", back_populates="payment")
+    user = sa.orm.relationship("User", back_populates="payment", lazy="noload")
 
 
 class Doorevent(Base):

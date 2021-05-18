@@ -47,10 +47,17 @@
                             }).then(function (response) {
                                 var stat = response.ok ? 'successful' : 'unsuccessful';
                                 alert('Registration ' + stat + ' More details in server log...');
+                                // enable 2 factor auth on me
+                                fetch('/user/me', {
+                                    method: 'PUT',
+                                    headers: { 'Authorization': 'Bearer ' + data.access_token, 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ enabled_2fa: true })
+                                }).then(response => response.json())
+                                    .then(d => console.log(d))
                             }, function (reason) {
                                 alert(reason);
                             }).then(function () {
-                                window.location = '/static/authenticate.html';
+                                // window.location = '/static/authenticate.html';
                             });
                     });
                 });
