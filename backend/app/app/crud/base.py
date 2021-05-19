@@ -105,7 +105,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         }
 
     async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-        # obj_in_data = jsonable_encoder(obj_in)
         query = (
             sa.insert(self.model)
             .values(**obj_in.dict(exclude_unset=True))
@@ -118,20 +117,19 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *args,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
-        # multi=False,
+        multi=False,
     ) -> ModelType:
         upd_dict = (
             obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         )
         query = (
-            sa.update(self.model)
-            .values(**upd_dict)
-            .where(*args)
-            .execution_options(synchronize_session="fetch")
+            sa.update(self.model).values(**upd_dict).where(*args).returning(self.model)
         )
-        res = (await db.execute(query)).scalar_one_or_none()
-        logger.info(res)
-        return res
+        res = await db.execute(query)
+        # TODO: returning in sqlalchemy doesnt seem to work currently on ORM objects?
+        if multi:
+            return res.scalars().all()
+        return res.scalar_one_or_none()
 
         # obj_data = jsonable_encoder(db_obj)
         # if isinstance(obj_in, dict):
