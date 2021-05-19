@@ -1,14 +1,14 @@
 FROM python:3.8
 # need the full version as some precompiled wheels are missing for raspberry 
 
-RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn
+RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn fastapi
 
 COPY ./gunicorn_conf.py /gunicorn_conf.py
 
 COPY ./start-reload.sh /start-reload.sh
 RUN chmod +x /start-reload.sh
 
-COPY requirements.txt requirements.txt
+COPY ./requirements.txt requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 

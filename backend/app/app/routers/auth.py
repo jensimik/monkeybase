@@ -152,9 +152,6 @@ async def login_access_token_with_2fa(
     if not user.active:
         raise HTTPException(status_code=400, detail="Inactive user")
 
-    # remove temoprary webauth state cookie
-    response.delete_cookie("_state")
-
     return create_access_token(user)
 
 

@@ -33,6 +33,26 @@ async def seed_data():
             }
         )
         await conn.execute(q)
+        q = sa.insert(User).values(
+            {
+                "name": "Some Name",
+                "email": "test-admin@test.dk",
+                "birthday": fake.date_of_birth(),
+                "hashed_password": get_password_hash("password"),
+                "scopes": "basic,admin",
+            }
+        )
+        await conn.execute(q)
+        q = sa.insert(User).values(
+            {
+                "name": "Some Name",
+                "email": "test-basic@test.dk",
+                "birthday": fake.date_of_birth(),
+                "hashed_password": get_password_hash("password"),
+                "scopes": "basic",
+            }
+        )
+        await conn.execute(q)
         for x in ["Full membership", "Morning membership"]:
             q = sa.insert(MemberType).values(
                 {
