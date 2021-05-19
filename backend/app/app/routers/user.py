@@ -77,7 +77,7 @@ async def user_list(
             sa.orm.selectinload(
                 models.User.member.and_(models.Member.active == True)
             ).selectinload(
-                models.Member.member_type.and_(models.Membertype.active == True)
+                models.Member.member_type.and_(models.MemberType.active == True)
             )
         ],
         *args,
