@@ -1,4 +1,5 @@
-FROM python:3.8-slim
+FROM python:3.8
+# need the full version as some precompiled wheels are missing for raspberry 
 
 RUN pip install --no-cache-dir "uvicorn[standard]" gunicorn
 
