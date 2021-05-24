@@ -34,7 +34,6 @@ async def member_type_list(
     """
     return await crud.member_type.get_multi_page(
         db,
-        (models.MemberType.open_public == True),
         per_page=paging.per_page,
         page=paging.page,
         order_by=[models.MemberType.name.asc()],
@@ -123,9 +122,9 @@ async def get_or_create_reservation(
         slot = await crud.member_type_slot.update(
             db,
             models.MemberTypeSlot.id == slot.id,
-            values={
-                models.MemberTypeSlot.user_id: user_id,
-                models.MemberTypeSlot.reserved_until: datetime.datetime.utcnow()
+            obj_in={
+                models.MemberTypeSlot.user_id.name: user_id,
+                models.MemberTypeSlot.reserved_until.name: datetime.datetime.utcnow()
                 + datetime.timedelta(minutes=30),
             },
         )

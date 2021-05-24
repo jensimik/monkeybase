@@ -26,7 +26,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get(
         self,
         db: AsyncSession,
-        where,
+        *args,
         options: List[Any] = [],
         only_active: Optional[bool] = True,
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
@@ -34,9 +34,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         for_update: Optional[bool] = None,
         skip_locked: Optional[bool] = True,
     ) -> Optional[ModelType]:
-        query = sa.select(self.model).where(where)
+        query = sa.select(self.model)
         if only_active:
-            query = query.where(self.model.active == True)
+            query = query.where(self.model.active == True, *args)
+        else:
+            query = query.where(*args)
         if options:
             query = query.options(*options)
         if order_by:
@@ -44,7 +46,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if limit:
             query = query.limit(1)
         if for_update:
-            query = query.for_update(skip_locked=skip_locked)
+            query = query.with_for_update(skip_locked=skip_locked)
         return (await db.execute(query)).scalar_one_or_none()
 
     def _get_multi_sql(
@@ -129,6 +131,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
         multi=False,
     ) -> ModelType:
+        logger.info(obj_in)
         upd_dict = (
             obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         )
@@ -137,9 +140,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         )
         res = await db.execute(query)
         # TODO: returning in sqlalchemy doesnt seem to work currently on ORM objects?
+        # so for now just select the updated objects again and return them
         if multi:
-            return res.scalars().all()
-        return res.scalar_one_or_none()
+            return await self.get_multi(db, *args)
+        return await self.get(db, *args)
 
         # obj_data = jsonable_encoder(db_obj)
         # if isinstance(obj_in, dict):

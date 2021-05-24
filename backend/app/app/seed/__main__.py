@@ -2,9 +2,10 @@ from loguru import logger
 import asyncio
 import sqlalchemy as sa
 import random
+import datetime
 from loguru import logger
 from app.db.base import Base, engine
-from app.models import User, MemberType, Member, Webauthn
+from app.models import User, MemberType, Member, Webauthn, MemberTypeSlot
 from app.core.security import get_password_hash
 from faker import Faker
 
@@ -57,8 +58,6 @@ async def seed_data():
             q = sa.insert(MemberType).values(
                 {
                     "name": x,
-                    "slots_available": random.randint(2, 10),
-                    "open_public": True,
                 }
             )
             await conn.execute(q)
@@ -84,6 +83,16 @@ async def seed_data():
                     "date_end": fake.date_this_year(
                         before_today=False, after_today=True
                     ),
+                }
+            )
+            await conn.execute(q)
+
+        for x in range(5):
+            q = sa.insert(MemberTypeSlot).values(
+                {
+                    "member_type_id": 1,
+                    "slot_type": "OPEN",
+                    "reserved_until": datetime.datetime.utcnow(),
                 }
             )
             await conn.execute(q)
