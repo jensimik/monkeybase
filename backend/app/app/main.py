@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from .routers import auth
 from .routers import user
 from .routers import member_type
+from .routers import member
 from .routers import webauthn
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
@@ -44,3 +45,4 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn-2fa"])
 app.include_router(user.router, prefix="/user", tags=["user"])
 app.include_router(member_type.router, prefix="/member_type", tags=["member"])
+# app.include_router(member.router, prefix="/member", tags=["member"])

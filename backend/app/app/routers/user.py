@@ -35,7 +35,7 @@ async def read_user_me(
 @router.put("/me", response_model=schemas.User)
 async def update_user_me(
     update: schemas.UserUpdateMe,
-    current_user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+    current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -48,6 +48,20 @@ async def update_user_me(
     except sa.exc.IntegrityError as ex:
         await db.rollback()
         raise ex
+
+
+@router.delete("/me")
+async def disable_myself(
+    db: AsyncSession = Depends(deps.get_db),
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+):
+    # actually just set active == False
+    await crud.user.remove(db, models.User.id == user_id)
+
+    # TODO: also disable/release any memberships this user have?
+    # or instead reject delete until unsubscribed any memberships? (probably better)
+
+    return True
 
 
 @router.get("", response_model=schemas.Page[schemas.User])
@@ -112,7 +126,6 @@ async def read_user_by_id(
 @router.get("/{user_id}/identicon.png", responses={200: {"content": {"image/png": {}}}})
 async def read_user_by_id_identicon(
     user_id: int,
-    _: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -153,3 +166,41 @@ async def member_list(
         per_page=paging.per_page,
         order_by=[models.MemberType.name.asc(), models.MemberType.id.asc()],
     )
+
+
+from fastapi import WebSocket, WebSocketDisconnect
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+
+manager = ConnectionManager()
+
+
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.send_personal_message(f"You wrote: {data}", websocket)
+            await manager.broadcast(f"Client #{client_id} says: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        await manager.broadcast(f"Client #{client_id} left the chat")

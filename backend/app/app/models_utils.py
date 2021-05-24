@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 from sqlalchemy.ext.compiler import compiles
+from enum import Enum
 
 
 class utcnow(sa.sql.expression.FunctionElement):
@@ -12,13 +13,13 @@ def pg_utcnow(element, compiler, **kw):
     return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
 
 
-# class gen_uuid(sa.sql.expression.FunctionElement):
-#     type = sa_pg.UUID()
+class gen_uuid(sa.sql.expression.FunctionElement):
+    type = sa_pg.UUID()
 
 
-# @compiles(gen_uuid, "postgresql")
-# def pg_uuid(element, compiler, **kw):
-#     return "uuid_generate_v4()"
+@compiles(gen_uuid, "postgresql")
+def pg_uuid(element, compiler, **kw):
+    return "uuid_generate_v4()"
 
 
 class TimestampableMixin:
@@ -31,3 +32,10 @@ class TimestampableMixin:
         server_default=utcnow(),
         onupdate=utcnow(),
     )
+
+
+class SlotTypeEnum(Enum):
+    """for member_type_slot to indicate if open registration slot or waiting list slot"""
+
+    OPEN = "OPEN"
+    WAITING = "WAITING"

@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 from app.db import Base
-from .models_utils import utcnow, TimestampableMixin
+from .models_utils import utcnow, gen_uuid, TimestampableMixin, SlotTypeEnum
 
 
 class User(TimestampableMixin, Base):
@@ -78,11 +78,22 @@ class MemberType(TimestampableMixin, Base):
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     name = sa.Column(sa.String, nullable=False)
-    slots_available = sa.Column(sa.Integer, default=0, nullable=False)
-    open_public = sa.Column(sa.Boolean, default=False, nullable=False)
-    open_waitinglist = sa.Column(sa.Boolean, default=False, nullable=False)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     member = sa.orm.relationship("Member", back_populates="member_type", lazy="noload")
+
+
+class MemberTypeSlot(TimestampableMixin, Base):
+    """model for available slots for a membertype"""
+
+    __tablename__ = "member_type_slot"
+
+    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
+    active = sa.Column(sa.Boolean, default=True, nullable=False)
+    key = sa.Column(sa_pg.UUID, nullable=False, default=gen_uuid())
+    slot_type = sa.Column(sa_pg.ENUM(SlotTypeEnum))
+    reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=True)
+    member_type_id = sa.Column(sa.Integer, sa.ForeignKey("member_type.id"))
 
 
 # class Participant(TimestampableMixin, Base):

@@ -91,7 +91,7 @@ async def complete_webauthn(
     db: AsyncSession = Depends(deps.get_db),
     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
     _state=Depends(webauthn_state),
-    securitykey_name: str = Query(...),
+    name: str = Query(...),
 ):
     try:
         # decode the requests body using cbor
@@ -136,14 +136,34 @@ async def complete_webauthn(
         db,
         schemas.WebauthnCreate(
             user_id=user_id,
-            name=securitykey_name,
+            name=name,
             credential=base64.b64encode(auth_data.credential_data),
             credential_id=auth_data.credential_data.credential_id.hex(),
         ),
     )
-    user = await crud.user.get(db, models.User.id == user_id)
-    # await crud.user.update(db, user, {"enabled_2fa": True})
     await db.commit()
 
     # return the response
     return response
+
+
+@router.get("", response_model=schemas.Webauthn)
+async def my_keys(
+    db: AsyncSession = Depends(deps.get_db),
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+):
+    return await crud.webauthn.get_multi(db, models.Webauthn.user_id == user_id)
+
+
+@router.delete("/{key_id}")
+async def disable_key(
+    key_id: int,
+    db: AsyncSession = Depends(deps.get_db),
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+):
+    # actually just set active == False
+    await crud.webauthn.remove(
+        db, models.Webauthn.user_id == user_id, models.Webauthn.id == key_id
+    )
+
+    return True

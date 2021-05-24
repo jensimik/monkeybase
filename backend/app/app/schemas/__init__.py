@@ -17,3 +17,9 @@ from .member import (
 )
 from .page import Page
 from .webauthn import Webauthn, WebauthnCreate, WebauthnUpdate
+from .member_type_slot import (
+    MemberTypeSlot,
+    MemberTypeSlotCreate,
+    MemberTypeSlotInDB,
+    MemberTypeSlotUpdate,
+)

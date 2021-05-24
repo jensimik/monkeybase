@@ -29,12 +29,22 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         where,
         options: List[Any] = [],
         only_active: Optional[bool] = True,
+        order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
+        limit: Optional[bool] = None,
+        for_update: Optional[bool] = None,
+        skip_locked: Optional[bool] = True,
     ) -> Optional[ModelType]:
         query = sa.select(self.model).where(where)
         if only_active:
             query = query.where(self.model.active == True)
         if options:
             query = query.options(*options)
+        if order_by:
+            query = query.order_by(*order_by)
+        if limit:
+            query = query.limit(1)
+        if for_update:
+            query = query.for_update(skip_locked=skip_locked)
         return (await db.execute(query)).scalar_one_or_none()
 
     def _get_multi_sql(
@@ -142,16 +152,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         # db.add(db_obj)
         # return db_obj
 
-    async def remove(self, db: AsyncSession, id: int, actual_delete=False) -> ModelType:
+    async def remove(self, db: AsyncSession, *args, actual_delete=False) -> ModelType:
         if actual_delete:
-            query = (
-                sa.delete(self.model).where(self.model.id == id).returning(self.model)
-            )
+            query = sa.delete(self.model).where(*args).returning(self.model)
             return (await db.execute(query)).scalar_one_or_none()
         # just set obj to inactive
-        query = (
-            sa.update(self.model)
-            .where(self.model.id == id)
-            .values({self.model.active: False})
-        )
+        query = sa.update(self.model).where(*args).values({self.model.active: False})
         await db.execute(query)

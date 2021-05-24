@@ -1,32 +1,23 @@
 from typing import Optional
-from datetime import datetime, date
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from pydantic import BaseModel
 
 
 # Shared properties
 class MemberTypeBase(BaseModel):
     active: Optional[bool] = True
     name: Optional[str] = None
-    slots_available: Optional[int] = None
-    open_public: Optional[bool] = False
-    open_wait: Optional[bool] = False
 
 
 # Properties to receive via API on creation
 class MemberTypeCreate(MemberTypeBase):
     name: str
-    slots_available: int
-    open_public: bool
-    open_wait: bool
 
 
 # Properties to receive via API on update
 class MemberTypeUpdate(MemberTypeBase):
     active: Optional[bool] = True
     name: Optional[str] = None
-    slots_available: Optional[int] = None
-    open_public: Optional[bool] = False
-    open_wait: Optional[bool] = False
 
 
 class MemberTypeInDBBase(MemberTypeBase):
