@@ -129,21 +129,25 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *args,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
-        multi=False,
+        multi: Optional[bool] = False,
+        only_active: Optional[bool] = True,
     ) -> ModelType:
         logger.info(obj_in)
         upd_dict = (
             obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         )
-        query = (
-            sa.update(self.model).values(**upd_dict).where(*args).returning(self.model)
-        )
+        query = sa.update(self.model).values(**upd_dict)
+        if only_active:
+            query = query.where(model.active == True, *args)
+        else:
+            query = query.where(*args)
+        query = query.returning(self.model)
         res = await db.execute(query)
         # TODO: returning in sqlalchemy doesnt seem to work currently on ORM objects?
         # so for now just select the updated objects again and return them
         if multi:
-            return await self.get_multi(db, *args)
-        return await self.get(db, *args)
+            return await self.get_multi(db, *args, only_active=only_active)
+        return await self.get(db, *args, only_active=only_active)
 
         # obj_data = jsonable_encoder(db_obj)
         # if isinstance(obj_in, dict):

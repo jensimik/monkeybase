@@ -53,7 +53,7 @@ app.include_router(member_type.router, prefix="/member_type", tags=["member"])
 
 
 @app.on_event("startup")
-@repeat_at(cron="*/1 * * * *", wait_first=True, raise_exceptions=True)
+@repeat_at(cron="*/10 * * * *", wait_first=True, raise_exceptions=True)
 async def _poor_mans_cron():
     logger.info("here")
     async with deps.get_db() as db:
@@ -64,6 +64,7 @@ async def _poor_mans_cron():
                 db,
                 models.LockTable.name == "crontest",
                 obj_in={"ran_at": datetime.datetime.utcnow()},
+                only_active=False,
             )
             logger.info("cron ping")
             await asyncio.sleep(
