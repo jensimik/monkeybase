@@ -5,7 +5,7 @@ import random
 import datetime
 from loguru import logger
 from app.db.base import Base, engine
-from app.models import User, MemberType, Member, Webauthn, MemberTypeSlot
+from app.models import User, MemberType, Member, Webauthn, MemberTypeSlot, LockTable
 from app.core.security import get_password_hash
 from faker import Faker
 
@@ -96,6 +96,9 @@ async def seed_data():
                 }
             )
             await conn.execute(q)
+
+        q = sa.insert(LockTable).values({"name": "crontest"})
+        await conn.execute(q)
 
         await conn.commit()
 

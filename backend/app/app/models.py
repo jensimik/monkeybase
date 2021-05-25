@@ -136,3 +136,10 @@ class Doorevent(Base):
         default=sa.func.current_timestamp(),
         primary_key=True,
     )
+
+
+class LockTable(Base):
+    __tablename__ = "lock_table"
+
+    name = sa.Column(sa.String, primary_key=True)
+    ran_at = sa.Column(sa.DateTime, nullable=False, default=utcnow())

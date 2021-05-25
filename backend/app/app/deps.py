@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import async_session
 from app import crud
 from app.models import User
+from contextlib import asynccontextmanager
 
 
 reusable_oauth2 = OAuth2PasswordBearer(
@@ -26,6 +27,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
 )
 
 
+@asynccontextmanager
 async def get_db() -> AsyncIterator[AsyncSession]:
     async with async_session() as session:
         yield session

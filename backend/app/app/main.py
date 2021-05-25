@@ -1,9 +1,13 @@
+import asyncio
+import datetime
 from loguru import logger
-from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.custom_swagger import get_swagger_ui_html
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from .cron import repeat_at
+from app import crud, models, deps
 
 from .routers import auth
 from .routers import user
@@ -46,3 +50,24 @@ app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn-2fa"])
 app.include_router(user.router, prefix="/user", tags=["user"])
 app.include_router(member_type.router, prefix="/member_type", tags=["member"])
 # app.include_router(member.router, prefix="/member", tags=["member"])
+
+
+@app.on_event("startup")
+@repeat_at(cron="*/1 * * * *", wait_first=True, raise_exceptions=True)
+async def _poor_mans_cron():
+    logger.info("here")
+    async with deps.get_db() as db:
+        if await crud.lock_table.get(
+            db, models.LockTable.name == "crontest", for_update=True, only_active=False
+        ):
+            await crud.lock_table.update(
+                db,
+                models.LockTable.name == "crontest",
+                obj_in={"ran_at": datetime.datetime.utcnow()},
+            )
+            logger.info("cron ping")
+            await asyncio.sleep(
+                10
+            )  # sleep a bit so the other processes fail to get lock
+
+            await db.commit()
