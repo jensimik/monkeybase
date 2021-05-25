@@ -56,7 +56,7 @@ app.include_router(member_type.router, prefix="/member_type", tags=["member"])
 @repeat_at(cron="*/10 * * * *", wait_first=True, raise_exceptions=True)
 async def _poor_mans_cron():
     logger.info("here")
-    async with deps.get_db() as db:
+    async with deps.get_db_context() as db:
         if await crud.lock_table.get(
             db, models.LockTable.name == "crontest", for_update=True, only_active=False
         ):

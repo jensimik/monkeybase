@@ -28,6 +28,11 @@ reusable_oauth2 = OAuth2PasswordBearer(
 
 
 @asynccontextmanager
+async def get_db_context():
+    async with async_session() as session:
+        yield session
+
+
 async def get_db() -> AsyncIterator[AsyncSession]:
     async with async_session() as session:
         yield session
