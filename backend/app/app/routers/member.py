@@ -8,13 +8,34 @@ from .. import models, schemas, crud, deps
 router = APIRouter()
 
 
-# @router.post("")
-# def test(
-#     create: schemas.MemberCreateMe,
-#     current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ):
-#     return False
+@router.post("")
+async def create_membership(
+    create: schemas.MemberCreateMe,
+    current_user_id: int = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    return False
+
+
+@router.patch("/{member_id}")
+async def modify_membership(
+    create: schemas.MemberCreateMe,
+    current_user_id: int = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    return False
+
+
+@router.delete("/{member_id}")
+async def deactivate_membership(
+    member_id: int,
+    user_id: int = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    member = await crud.member.get(
+        db, models.Member.id == member_id, models.Member.user_id == user_id
+    )
+    return False
 
 
 @router.get("", response_model=schemas.Page[schemas.MemberUser])

@@ -5,7 +5,7 @@ from .. import deps, schemas, models, crud
 import sqlalchemy as sa
 import looms
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Security, Response
+from fastapi import APIRouter, Depends, Security, Response, status
 
 router = APIRouter()
 
@@ -79,7 +79,7 @@ async def read_user_by_id(
     )
 
 
-@router.put("/{user_id}", response_model=schemas.User)
+@router.patch("/{user_id}", response_model=schemas.User)
 async def update_user(
     update: schemas.UserUpdate,
     user_id: int,
@@ -98,7 +98,7 @@ async def update_user(
         raise ex
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
@@ -106,7 +106,7 @@ async def delete_user(
 ):
     """disable user"""
 
-    return await _delete_user(db, user_id)
+    await _delete_user(db, user_id)
 
 
 @router.get("/{user_id}/identicon.png", responses={200: {"content": {"image/png": {}}}})
@@ -128,51 +128,51 @@ async def read_user_by_id_identicon(
         return Response(content=bi.getvalue(), media_type="image/png")
 
 
-@router.get("/me", response_model=schemas.User)
-async def read_user_me(
-    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-    db: AsyncSession = Depends(deps.get_db),
-) -> Any:
-    """
-    Get current user.
-    """
-    return await crud.user.get(
-        db,
-        models.User.id == user_id,
-        options=[
-            sa.orm.subqueryload(
-                models.User.member.and_(models.Member.active == True)
-            ).subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            )
-        ],
-    )
+# @router.get("/me", response_model=schemas.User)
+# async def read_user_me(
+#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+#     db: AsyncSession = Depends(deps.get_db),
+# ) -> Any:
+#     """
+#     Get current user.
+#     """
+#     return await crud.user.get(
+#         db,
+#         models.User.id == user_id,
+#         options=[
+#             sa.orm.subqueryload(
+#                 models.User.member.and_(models.Member.active == True)
+#             ).subqueryload(
+#                 models.Member.member_type.and_(models.MemberType.active == True)
+#             )
+#         ],
+#     )
 
 
-@router.put("/me", response_model=schemas.User)
-async def update_user_me(
-    update: schemas.UserUpdateMe,
-    current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),
-    db: AsyncSession = Depends(deps.get_db),
-) -> Any:
-    """
-    Update own user.
-    """
-    user = await crud.user.update(db, models.User.id == current_user_id, obj_in=update)
-    try:
-        await db.commit()
-        return user
-    except sa.exc.IntegrityError as ex:
-        await db.rollback()
-        raise ex
+# @router.patch("/me", response_model=schemas.User)
+# async def update_user_me(
+#     update: schemas.UserUpdateMe,
+#     current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),
+#     db: AsyncSession = Depends(deps.get_db),
+# ) -> Any:
+#     """
+#     Update own user.
+#     """
+#     user = await crud.user.update(db, models.User.id == current_user_id, obj_in=update)
+#     try:
+#         await db.commit()
+#         return user
+#     except sa.exc.IntegrityError as ex:
+#         await db.rollback()
+#         raise ex
 
 
-@router.delete("/me")
-async def disable_myself(
-    db: AsyncSession = Depends(deps.get_db),
-    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-):
-    return await _delete_user(db, user_id)
+# @router.delete("/me")
+# async def disable_myself(
+#     db: AsyncSession = Depends(deps.get_db),
+#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+# ):
+#     return await _delete_user(db, user_id)
 
 
 # @router.get("/{user_id}/member", response_model=schemas.Page[schemas.MemberMemberType])

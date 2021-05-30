@@ -51,7 +51,7 @@ async def get_member_type(
     return await crud.member_type.get(db, models.MemberType.id == member_type_id)
 
 
-@router.put("/{member_type_id}", response_model=schemas.MemberType)
+@router.patch("/{member_type_id}", response_model=schemas.MemberType)
 async def update_member_type(
     member_type_id: int,
     update: schemas.MemberTypeUpdate,
@@ -65,7 +65,7 @@ async def update_member_type(
     )
 
 
-@router.delete("/{member_type_id}")
+@router.delete("/{member_type_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_memeber_type(
     member_type_id: int,
     _: models.User = Security(deps.get_current_user_id, scopes=["admin"]),
@@ -73,7 +73,7 @@ async def delete_memeber_type(
 ):
     """disable a member_type"""
 
-    return await crud.member_type.remove(db, models.MemberType.id == member_type_id)
+    await crud.member_type.remove(db, models.MemberType.id == member_type_id)
 
 
 @router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.MemberTypeSlot)
@@ -204,3 +204,45 @@ async def create_payment_intent(
     db: AsyncSession = Depends(deps.get_db),
 ):
     pass
+
+
+@router.get(
+    "/{member_type_id}/members", response_model=schemas.Page[schemas.MemberUser]
+)
+async def member_list(
+    member_type_id: int,
+    paging: deps.Paging = Depends(deps.Paging),
+    q: deps.Q = Depends(deps.Q),
+    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    """
+    Get list of all member for this membership_type
+    """
+    args = (
+        [
+            sa.or_(
+                sa.func.lower(models.User.name).contains(q.q.lower(), autoescape=True),
+                sa.func.lower(models.User.email).contains(q.q.lower(), autoescape=True),
+            )
+        ]
+        if q.q
+        else []
+    )
+    if member_type_id is not None:
+        args.append(models.Member.member_type_id == member_type_id)
+
+    return await crud.member.get_multi_page(
+        db,
+        join=[models.Member.user],
+        *args,
+        options=[
+            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
+            sa.orm.subqueryload(
+                models.Member.member_type.and_(models.MemberType.active == True)
+            ),
+        ],
+        per_page=paging.per_page,
+        page=paging.page,
+        order_by=[models.User.name.asc()],
+    )

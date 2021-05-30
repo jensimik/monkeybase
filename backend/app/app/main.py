@@ -12,6 +12,7 @@ from . import crud, models, deps
 # routes
 from .routers import auth
 from .routers import user
+from .routers import me
 from .routers import member_type
 from .routers import member
 from .routers import webauthn
@@ -48,9 +49,10 @@ async def root():
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn_2fa"])
-app.include_router(user.router, prefix="/user", tags=["user"])
-app.include_router(member_type.router, prefix="/member_type", tags=["member_type"])
-app.include_router(member.router, prefix="/member", tags=["member"])
+app.include_router(user.router, prefix="/users", tags=["user"])
+app.include_router(me.router, prefix="/me", tags=["me"])
+app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
+app.include_router(member.router, prefix="/members", tags=["member"])
 
 
 @app.on_event("startup")
