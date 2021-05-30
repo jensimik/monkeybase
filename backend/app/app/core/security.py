@@ -2,14 +2,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import jwt
 from passlib.context import CryptContext
-from app.core.config import settings
-from app import models
 from fido2.server import Fido2Server
 from fido2.webauthn import PublicKeyCredentialRpEntity
-from fido2 import cbor
 from fastapi.security import APIKeyCookie
-from fastapi import Response
-from .utils import generate_webauthn_state_token
+from .config import settings
+from .. import models
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

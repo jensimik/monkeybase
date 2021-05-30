@@ -1,6 +1,4 @@
-from typing import Optional, List
-from uuid import UUID
-from datetime import datetime, date
+from typing import Optional
 from pydantic import BaseModel
 
 # Shared properties

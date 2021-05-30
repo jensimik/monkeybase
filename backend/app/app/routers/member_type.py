@@ -1,8 +1,9 @@
 import sqlalchemy as sa
 import datetime
 from typing import List, Any
-from app import deps, schemas, models, crud
-from app.models_utils import SlotTypeEnum
+from .. import deps, schemas, models, crud
+from ..core import stripe
+from ..models_utils import SlotTypeEnum
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, Security, status, HTTPException
 
@@ -26,7 +27,6 @@ async def create_member_type(
 @router.get("", response_model=schemas.Page[schemas.MemberType])
 async def member_type_list(
     paging: deps.Paging = Depends(deps.Paging),
-    # _: int = Security(deps.get_current_user_id, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -40,56 +40,52 @@ async def member_type_list(
     )
 
 
-@router.get("/{member_type_id}/member", response_model=schemas.Page[schemas.MemberUser])
-async def member_list(
+@router.get("/{member_type_id}", response_model=schemas.MemberType)
+async def get_member_type(
     member_type_id: int,
-    paging: deps.Paging = Depends(deps.Paging),
-    q: deps.Q = Depends(deps.Q),
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    Get list of all member for this membership_type
+    Get a member type
     """
-    args = (
-        [
-            sa.or_(
-                sa.func.lower(models.User.name).contains(q.q.lower(), autoescape=True),
-                sa.func.lower(models.User.email).contains(q.q.lower(), autoescape=True),
-            )
-        ]
-        if q.q
-        else []
-    )
-    return await crud.member.get_multi_page(
-        db,
-        (models.Member.member_type_id == member_type_id),
-        join=[models.Member.user],
-        *args,
-        options=[
-            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
-            sa.orm.subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            ),
-        ],
-        per_page=paging.per_page,
-        page=paging.page,
-        order_by=[models.User.name.asc()],
-    )
+    return await crud.member_type.get(db, models.MemberType.id == member_type_id)
 
 
-@router.post(
-    "/{member_type_id}/get_or_create_reservation", response_model=schemas.MemberTypeSlot
-)
-async def get_or_create_reservation(
+@router.put("/{member_type_id}", response_model=schemas.MemberType)
+async def update_member_type(
     member_type_id: int,
-    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+    update: schemas.MemberTypeUpdate,
+    _: models.User = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    """update a member_type"""
+
+    return await crud.member_type.update(
+        db, models.MemberType.id == member_type_id, obj_in=update
+    )
+
+
+@router.delete("/{member_type_id}")
+async def delete_memeber_type(
+    member_type_id: int,
+    _: models.User = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    """disable a member_type"""
+
+    return await crud.member_type.remove(db, models.MemberType.id == member_type_id)
+
+
+@router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.MemberTypeSlot)
+async def reserve_a_slot(
+    member_type_id: int,
+    user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
     # check if user is already a member of this membertype already?
     if await crud.member.get(
         db,
-        models.Member.user_id == user_id,
+        models.Member.user_id == user.id,
         models.Member.member_type_id == member_type_id,
         models.Member.active == True,
     ):
@@ -102,7 +98,7 @@ async def get_or_create_reservation(
     if slot := await crud.member_type_slot.get(
         db,
         models.MemberTypeSlot.member_type_id == member_type_id,
-        models.MemberTypeSlot.user_id == user_id,
+        models.MemberTypeSlot.user_id == user.id,
         models.MemberTypeSlot.reserved_until > datetime.datetime.utcnow(),
     ):
         return slot
@@ -123,12 +119,26 @@ async def get_or_create_reservation(
             db,
             models.MemberTypeSlot.id == slot.id,
             obj_in={
-                models.MemberTypeSlot.user_id.name: user_id,
+                models.MemberTypeSlot.user_id.name: user.id,
                 models.MemberTypeSlot.reserved_until.name: datetime.datetime.utcnow()
                 + datetime.timedelta(minutes=30),
             },
         )
         await db.commit()
+
+        # ensure user is created in stripe as a customer
+        if user.stripe_customer_id:
+            stripe.update_customer(email=user.email, name=user.name)
+        else:
+            stripe_customer_id = stripe.create_customer(
+                email=user.email, name=user.name
+            )
+            user = await crud.user.update(
+                db,
+                models.User.id == user.id,
+                obj_in={"stripe_customer_id": stripe_customer_id},
+            )
+
         # TODO: maybe signal to websocket that one slot is reserved
         # TODO: maybe create a background task to wait for 30 minutes
         # and trigger a recalculation of available slots on the websocket
@@ -138,3 +148,59 @@ async def get_or_create_reservation(
     raise HTTPException(
         status_code=404, detail="no slots available currently - try again later"
     )
+
+
+@router.post("/{member_type_id}/use_a_slot", response_model=schemas.Member)
+async def use_a_slot(
+    member_type_id: int,
+    member: schemas.MemberCreateMe,
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    slot = await crud.member_type_slot.get(
+        db,
+        models.MemberTypeSlot.key == member.key,
+        models.MemberTypeSlot.user_id == user_id,
+        models.MemberTypeSlot.member_type_id == member_type_id,
+        models.MemberTypeSlot.reserved_until > datetime.datetime.utcnow(),
+        for_update=True,
+    )
+    if not slot:
+        raise HTTPException(
+            status_code=401,
+            detail="sorry, your reservation does not exist or has expired",
+        )
+    # disable the slot if successfull
+    await crud.member_type_slot.remove(db, models.MemberTypeSlot.id == slot.id)
+
+    # TODO: validate member.payment_id?
+    # TODO: and mark the payment reservation to be captured at next capture run
+
+    date_start = datetime.date.utcnow()
+    # ends last day of year/new years - have to renew membership before that date!
+    date_end = datetime.date(
+        year=date_start.year + 1, month=1, day=1
+    ) - datetime.timedelta(days=1)
+    member = await crud.member.create(
+        db,
+        schemas.MemberCreate(
+            user_id=user_id,
+            member_type_id=member_type_id,
+            payment_id=member.payment_id,
+            date_start=date_start,
+            date_end=date_end,
+        ),
+    )
+
+    await db.commit()
+
+    return member
+
+
+@router.post("/{member_type_id}/create_payment_intent")
+async def create_payment_intent(
+    member_type_id: int,
+    user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    pass

@@ -1,11 +1,7 @@
-import uuid
-import sqlalchemy as sa
-import secrets
 import fido2
-from base64 import b64encode, b64decode
+from base64 import b64decode
 from loguru import logger
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 from fastapi import (
     APIRouter,
     Request,
@@ -17,16 +13,17 @@ from fastapi import (
     Path,
     status,
 )
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
-from app import schemas, deps, crud, models
-from app.core.security import (
+from .. import schemas, deps, crud, models
+from ..core.security import (
     get_password_hash,
     verify_password,
     create_access_token,
     webauthn_state,
     fido2server,
 )
-from app.core.utils import (
+from ..core.utils import (
     generate_password_reset_token,
     # send_reset_password_email,
     verify_password_reset_token,
@@ -85,7 +82,6 @@ async def login_access_token(
 @router.post("/two-factor-complete", response_model=schemas.Token)
 async def login_access_token_with_2fa(
     request: Request,
-    response: Response,
     _state=Depends(webauthn_state),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:

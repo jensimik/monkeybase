@@ -1,12 +1,12 @@
-from loguru import logger
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
 import emails
 from emails.template import JinjaTemplate
+from loguru import logger
 from jose import jwt
-from app import models
-from app.core.config import settings
+from .. import models
+from .config import settings
 
 
 def send_email(

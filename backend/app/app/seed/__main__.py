@@ -4,9 +4,9 @@ import sqlalchemy as sa
 import random
 import datetime
 from loguru import logger
-from app.db.base import Base, engine
-from app.models import User, MemberType, Member, Webauthn, MemberTypeSlot, LockTable
-from app.core.security import get_password_hash
+from ..db.base import Base, engine
+from ..models import User, MemberType, Member, Webauthn, MemberTypeSlot, LockTable
+from ..core.security import get_password_hash
 from faker import Faker
 
 

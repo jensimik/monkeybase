@@ -1,6 +1,5 @@
-import sqlalchemy as sa
-import fido2
 import base64
+import fido2
 from fastapi import (
     APIRouter,
     Request,
@@ -13,10 +12,11 @@ from fastapi import (
     status,
 )
 from typing import Any
-from app import deps, models, crud, schemas
+from .. import deps, models, crud, schemas
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.config import settings
-from app.core.utils import generate_webauthn_state_token, verify_webauthn_staten_token
+from ..core.config import settings
+from ..core.utils import generate_webauthn_state_token, verify_webauthn_staten_token
 
 rp = fido2.webauthn.PublicKeyCredentialRpEntity(
     settings.WEBAUTHN_RP_ID, settings.WEBAUTHN_RP_NAME

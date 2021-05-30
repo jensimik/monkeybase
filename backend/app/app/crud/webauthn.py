@@ -1,8 +1,6 @@
-from app.crud.base import CRUDBase
-from app.models import Webauthn
-from app.schemas import WebauthnCreate, WebauthnUpdate
-import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
+from .base import CRUDBase
+from ..models import Webauthn
+from ..schemas import WebauthnCreate, WebauthnUpdate
 
 
 class CRUDWebauthn(CRUDBase[Webauthn, WebauthnCreate, WebauthnUpdate]):

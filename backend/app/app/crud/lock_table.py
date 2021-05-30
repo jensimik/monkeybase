@@ -1,7 +1,7 @@
-from app.crud.base import CRUDBase
-from app.models import LockTable
-import pydantic
 from datetime import datetime
+from .base import CRUDBase
+from ..models import LockTable
+import pydantic
 
 
 class LockTableSchema(pydantic.BaseModel):

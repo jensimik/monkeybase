@@ -1,6 +1,6 @@
-from app.crud.base import CRUDBase
-from app.models import User
-from app.schemas import UserCreate, UserUpdate
+from .base import CRUDBase
+from ..models import User
+from ..schemas import UserCreate, UserUpdate
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 

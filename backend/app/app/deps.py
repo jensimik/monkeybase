@@ -2,15 +2,13 @@ import aiohttp
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
-from pydantic import ValidationError, Field
+from pydantic import ValidationError
 from typing import AsyncIterator, Optional
-from app import schemas, models
-from app.core import security
-from app.core.config import settings
+from . import schemas, models, crud
+from .core import security
+from .core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.base import async_session
-from app import crud
-from app.models import User
+from .db.base import async_session
 from contextlib import asynccontextmanager
 
 
@@ -75,7 +73,7 @@ async def get_current_user_id(
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
-) -> User:
+) -> models.User:
     user = await crud.user.get(db, models.User.id == user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -85,7 +83,6 @@ async def get_current_user(
 class Paging:
     def __init__(
         self,
-        q: Optional[str] = Query(None, description="search string"),
         page: Optional[str] = Query(
             None,
             description="page keyset to fetch, empty/undefined for first page",
@@ -97,7 +94,6 @@ class Paging:
             le=10000,
         ),
     ):
-        self.q = q
         self.page = page
         self.per_page = per_page
 

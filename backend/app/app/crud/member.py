@@ -1,10 +1,6 @@
-import datetime
-from typing import Optional
-from app.crud.base import CRUDBase
-from app.models import MemberType, Member, User
-from app.schemas import MemberCreate, MemberUpdate
-import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
+from .base import CRUDBase
+from ..models import Member
+from ..schemas import MemberCreate, MemberUpdate
 
 
 class CRUDMember(CRUDBase[Member, MemberCreate, MemberUpdate]):

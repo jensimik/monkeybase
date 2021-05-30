@@ -16,6 +16,9 @@ sqlalchemy
 alembic
 sqlakeyset
 
+# stripe / card payments
+stripe
+
 # requests/client-get
 aiohttp[speedups]
 
@@ -28,9 +31,6 @@ emails
 # retry library
 tenacity
 
-# sane logging
-loguru
-
 # identicon
 looms
 
@@ -39,3 +39,8 @@ croniter
 
 # for pub/sub channels via postgres :-o
 broadcaster[postgres]
+
+# misc
+python-dateutil
+loguru
+

@@ -1,6 +1,6 @@
-from app.crud.base import CRUDBase
-from app.models import MemberTypeSlot
-from app.schemas import MemberTypeSlotCreate, MemberTypeSlotUpdate
+from .base import CRUDBase
+from ..models import MemberTypeSlot
+from ..schemas import MemberTypeSlotCreate, MemberTypeSlotUpdate
 
 
 class CRUDMemberTypeSlot(

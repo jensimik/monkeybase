@@ -12,6 +12,7 @@ from .member import (
     MemberUser,
     MemberMemberType,
     MemberCreate,
+    MemberCreateMe,
     MemberInDB,
     MemberUpdate,
 )

@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
-from app.db import Base
+from .db import Base
 from .models_utils import utcnow, gen_uuid, TimestampableMixin, SlotTypeEnum
 
 
@@ -79,6 +79,9 @@ class MemberType(TimestampableMixin, Base):
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     name = sa.Column(sa.String, nullable=False)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
+    slot_limit = sa.Column(sa.Integer, default=0, nullable=False)
+    slot_enabled = sa.Column(sa.Boolean, default=True, nullable=False)
+    price = sa.Column(sa.Integer, default=0, nullable=False)  # price in cents
     member = sa.orm.relationship("Member", back_populates="member_type", lazy="noload")
 
 
@@ -121,8 +124,10 @@ class Payment(TimestampableMixin, Base):
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=False)
-    amount = sa.Column(sa.Numeric, nullable=False)
-    paid = sa.Column(sa.Boolean, default=False, nullable=False)
+    amount = sa.Column(sa.Integer, nullable=False)  # in cents
+    reserved = sa.Column(sa.Boolean, default=False, nullable=False)
+    captured = sa.Column(sa.Boolean, default=False, nullable=False)
+    stripe_id = sa.Column(sa.String, nullable=True)
     user = sa.orm.relationship("User", back_populates="payment", lazy="noload")
 
 

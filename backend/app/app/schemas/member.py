@@ -1,9 +1,7 @@
 from typing import Optional
 from datetime import datetime, date
-from pydantic import BaseModel, EmailStr
-
-# from . import User
-# from . import MemberType
+from pydantic import BaseModel
+from uuid import UUID
 
 
 # Shared properties
@@ -13,6 +11,11 @@ class MemberBase(BaseModel):
     date_start: Optional[date] = None
     date_end: Optional[date] = None
     payment_id: Optional[int] = None
+
+
+class MemberCreateMe(BaseModel):
+    key: UUID
+    payment_id: int
 
 
 # Properties to receive via API on creation

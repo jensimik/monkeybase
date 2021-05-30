@@ -1,12 +1,10 @@
 import sqlalchemy as sa
 from loguru import logger
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from .utils import select_page
-
-from app.db import Base
+from ..db import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -132,13 +130,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         multi: Optional[bool] = False,
         only_active: Optional[bool] = True,
     ) -> ModelType:
-        logger.info(obj_in)
         upd_dict = (
             obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         )
         query = sa.update(self.model).values(**upd_dict)
         if only_active:
-            query = query.where(model.active == True, *args)
+            query = query.where(self.model.active == True, *args)
         else:
             query = query.where(*args)
         query = query.returning(self.model)
@@ -148,17 +145,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if multi:
             return await self.get_multi(db, *args, only_active=only_active)
         return await self.get(db, *args, only_active=only_active)
-
-        # obj_data = jsonable_encoder(db_obj)
-        # if isinstance(obj_in, dict):
-        #     update_data = obj_in
-        # else:
-        #     update_data = obj_in.dict(exclude_unset=True)
-        # for field in obj_data:
-        #     if field in update_data:
-        #         setattr(db_obj, field, update_data[field])
-        # db.add(db_obj)
-        # return db_obj
 
     async def remove(self, db: AsyncSession, *args, actual_delete=False) -> ModelType:
         if actual_delete:
