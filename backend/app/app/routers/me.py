@@ -30,7 +30,7 @@ async def read_user_me(
     )
 
 
-@router.put("", response_model=schemas.User)
+@router.patch("", response_model=schemas.User)
 async def update_user_me(
     update: schemas.UserUpdateMe,
     current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),

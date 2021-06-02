@@ -1,7 +1,14 @@
+import datetime
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 from .db import Base
-from .models_utils import utcnow, gen_uuid, TimestampableMixin, SlotTypeEnum
+from .models_utils import (
+    utcnow,
+    gen_uuid,
+    TimestampableMixin,
+    SlotTypeEnum,
+    DoorAccessEnum,
+)
 
 
 class User(TimestampableMixin, Base):
@@ -81,6 +88,9 @@ class MemberType(TimestampableMixin, Base):
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     slot_limit = sa.Column(sa.Integer, default=0, nullable=False)
     slot_enabled = sa.Column(sa.Boolean, default=True, nullable=False)
+    door_access = sa.Column(
+        sa_pg.ENUM(DoorAccessEnum), nullable=False, default=DoorAccessEnum.NOACCESS
+    )
     price = sa.Column(sa.Integer, default=0, nullable=False)  # price in cents
     member = sa.orm.relationship("Member", back_populates="member_type", lazy="noload")
 
@@ -93,7 +103,9 @@ class MemberTypeSlot(TimestampableMixin, Base):
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     key = sa.Column(sa_pg.UUID, nullable=False, default=gen_uuid())
-    slot_type = sa.Column(sa_pg.ENUM(SlotTypeEnum))
+    slot_type = sa.Column(
+        sa_pg.ENUM(SlotTypeEnum), nullable=False, default=SlotTypeEnum.OPEN
+    )
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=True)
     member_type_id = sa.Column(sa.Integer, sa.ForeignKey("member_type.id"))
@@ -135,6 +147,7 @@ class Doorevent(Base):
     __tablename__ = "door_event"
 
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
+    active = sa.orm.column_property(sa.func.coalesce(True))
     created_at = sa.Column(
         sa.DateTime,
         nullable=False,

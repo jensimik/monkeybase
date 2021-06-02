@@ -39,3 +39,10 @@ class SlotTypeEnum(Enum):
 
     OPEN = "OPEN"
     WAITING = "WAITING"
+
+
+class DoorAccessEnum(Enum):
+
+    FULL = "FULL"
+    MORNING = "MORNING"
+    NOACCESS = "NOACCESS"

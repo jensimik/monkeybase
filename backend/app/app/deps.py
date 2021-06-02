@@ -16,10 +16,6 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
     scopes={
         "basic": "the basic scope for a logged in user",
-        "member": "user is a member at some level",
-        "member_full": "standard full member",
-        "member_morning": "member morning only",
-        "member_banana": "member banana",
         "admin": "admin scope only for the board/admin",
     },
 )

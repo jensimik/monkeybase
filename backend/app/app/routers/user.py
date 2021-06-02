@@ -41,6 +41,9 @@ async def user_list(
         if q.q
         else []
     )
+
+    logger.info(f"per page is {paging.per_page}")
+
     return await crud.user.get_multi_page(
         db,
         options=[

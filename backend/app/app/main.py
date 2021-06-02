@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import pathlib
 from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
@@ -16,6 +17,7 @@ from .routers import me
 from .routers import member_type
 from .routers import member
 from .routers import webauthn
+from .routers import door
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 
@@ -28,6 +30,8 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+module_dir = pathlib.Path(__file__).parent.absolute()
 
 
 @app.get("/docs", include_in_schema=False)
@@ -46,13 +50,14 @@ async def root():
     return {"message": "go away, nothing to see here"}
 
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=module_dir / "static"), name="static")
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn_2fa"])
 app.include_router(user.router, prefix="/users", tags=["user"])
 app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
 app.include_router(member.router, prefix="/members", tags=["member"])
+app.include_router(door.router, prefix="/door-access", tags=["door"])
 
 
 @app.on_event("startup")

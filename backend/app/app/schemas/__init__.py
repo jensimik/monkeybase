@@ -24,3 +24,4 @@ from .member_type_slot import (
     MemberTypeSlotInDB,
     MemberTypeSlotUpdate,
 )
+from .door_event import DoorEvent
