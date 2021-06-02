@@ -1,9 +1,11 @@
-import asyncio, logging
-from datetime import datetime, timedelta
+import asyncio
+import logging
 from asyncio import ensure_future
+from datetime import datetime, timedelta
 from functools import wraps
 from traceback import format_exception
 from typing import Any, Callable, Coroutine, Optional, Union
+
 from croniter import croniter
 from starlette.concurrency import run_in_threadpool
 
@@ -38,7 +40,7 @@ async def _seconds_to_next_run(
                 raise exc
     elif seconds and logger is not None:
         next_dt = datetime.now() + timedelta(seconds=seconds)
-        logging.info(
+        logger.info(
             f"{logger.name} next run: {next_dt.replace(microsecond=0).isoformat()}"
         )
 

@@ -1,7 +1,9 @@
 from datetime import datetime
-from .base import CRUDBase
-from ..models import LockTable
+
 import pydantic
+
+from ..models import LockTable
+from .base import CRUDBase
 
 
 class LockTableSchema(pydantic.BaseModel):

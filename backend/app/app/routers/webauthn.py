@@ -1,20 +1,22 @@
 import base64
+from typing import Any
+
 import fido2
+import sqlalchemy as sa
 from fastapi import (
     APIRouter,
-    Request,
-    Response,
     Depends,
     HTTPException,
-    security,
-    Security,
     Query,
+    Request,
+    Response,
+    Security,
+    security,
     status,
 )
-from typing import Any
-from .. import deps, models, crud, schemas
-import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from .. import crud, deps, models, schemas
 from ..core.config import settings
 from ..core.utils import generate_webauthn_state_token, verify_webauthn_staten_token
 

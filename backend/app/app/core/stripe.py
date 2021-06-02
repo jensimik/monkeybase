@@ -1,4 +1,5 @@
 import stripe
+
 from .config import settings
 
 stripe.api_key = settings.STRIPE_API_KEY

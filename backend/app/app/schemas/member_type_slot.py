@@ -1,8 +1,11 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from datetime import datetime
+
 from pydantic import BaseModel
+
 from ..models_utils import SlotTypeEnum
+
 
 # Shared properties
 class MemberTypeSlotBase(BaseModel):

@@ -1,10 +1,12 @@
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+
 import sqlalchemy as sa
 from loguru import logger
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from .utils import select_page
+
 from ..db import Base
+from .utils import select_page
 
 ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -114,13 +116,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             "has_next": items.paging.has_next,
         }
 
-    async def create(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-        query = (
-            sa.insert(self.model)
-            .values(**obj_in.dict(exclude_unset=True))
-            .returning(self.model)
-        )
-        return (await db.execute(query)).scalar_one()
+    async def create(
+        self, db: AsyncSession, obj_in: Union[CreateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
+        values = obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
+        query = sa.insert(self.model).values(**values).returning(self.model.id)
+        obj_id = (await db.execute(query)).scalar_one()
+        return await self.get(db, self.model.id == obj_id)
 
     async def update(
         self,
@@ -138,13 +140,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.where(self.model.active == True, *args)
         else:
             query = query.where(*args)
-        query = query.returning(self.model)
+        query = query.returning(self.model.id)
         res = await db.execute(query)
         # TODO: returning in sqlalchemy doesnt seem to work currently on ORM objects?
         # so for now just select the updated objects again and return them
         if multi:
-            return await self.get_multi(db, *args, only_active=only_active)
-        return await self.get(db, *args, only_active=only_active)
+            return await self.get_multi(
+                db, self.model.id.in_(res.scalars().all()), only_active=False
+            )
+        return await self.get(db, self.model.id == res.scalar_one(), only_active=False)
 
     async def remove(self, db: AsyncSession, *args, actual_delete=False) -> ModelType:
         if actual_delete:

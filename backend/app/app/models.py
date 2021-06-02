@@ -1,13 +1,15 @@
 import datetime
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
+
 from .db import Base
 from .models_utils import (
-    utcnow,
-    gen_uuid,
-    TimestampableMixin,
-    SlotTypeEnum,
     DoorAccessEnum,
+    SlotTypeEnum,
+    TimestampableMixin,
+    gen_uuid,
+    utcnow,
 )
 
 

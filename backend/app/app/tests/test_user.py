@@ -1,3 +1,8 @@
+import datetime
+
+import pytest
+from app import models
+from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
 
@@ -48,3 +53,36 @@ def test_get_users_page_size(auth_client_admin: TestClient):
     data = response.json()
 
     assert len(data["items"]) == 10
+
+
+def test_create_user(auth_client_admin: TestClient):
+    response = auth_client_admin.post(
+        "/users",
+        json=jsonable_encoder(
+            {
+                "name": "new user",
+                "email": "test-create-user@test.dk",
+                "password": "humn",
+                "birthday": datetime.date.today(),
+            }
+        ),
+    )
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data == False
+
+
+@pytest.mark.parametrize(
+    "c", [pytest.lazy_fixture("auth_client_basic"), pytest.lazy_fixture("client")]
+)
+def test_no_access(c: TestClient, user_basic: models.User):
+    for response in [
+        c.get("/users", params={"per_page": 10}),
+        c.get(f"/users/{user_basic.id}"),
+        c.patch(f"/users/{user_basic.id}", json={"name": "new name"}),
+        c.post("/users", json={"name": "new user"}),
+        c.delete(f"/users/{user_basic.id}"),
+    ]:
+        assert response.status_code == 401

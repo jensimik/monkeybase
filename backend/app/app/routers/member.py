@@ -1,9 +1,10 @@
 from typing import Any, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Security
-import sqlalchemy as sa
-from .. import models, schemas, crud, deps
 
+import sqlalchemy as sa
+from fastapi import APIRouter, Depends, Security
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .. import crud, deps, models, schemas
 
 router = APIRouter()
 

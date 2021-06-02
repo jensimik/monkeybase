@@ -1,7 +1,8 @@
+from enum import Enum
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 from sqlalchemy.ext.compiler import compiles
-from enum import Enum
 
 
 class utcnow(sa.sql.expression.FunctionElement):

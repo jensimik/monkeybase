@@ -1,16 +1,17 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Optional
+
 import aiohttp
-from fastapi import Depends, HTTPException, status, Query
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
 from pydantic import ValidationError
-from typing import AsyncIterator, Optional
-from . import schemas, models, crud
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from . import crud, models, schemas
 from .core import security
 from .core.config import settings
-from sqlalchemy.ext.asyncio import AsyncSession
 from .db.base import async_session
-from contextlib import asynccontextmanager
-
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
@@ -50,9 +51,7 @@ async def get_current_user_id(
         headers={"WWW-Authenticate": authenticate_value},
     )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
+        payload = parse_token(token)
         token_data = schemas.TokenPayload(**payload)
     except (jwt.JWTError, ValidationError) as ex:
         raise credentials_exception from ex
@@ -64,6 +63,11 @@ async def get_current_user_id(
                 headers={"WWW-Authenticate": authenticate_value},
             )
     return int(token_data.sub)
+
+
+def parse_token(token: str) -> dict:
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
+    return payload
 
 
 async def get_current_user(

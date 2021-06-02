@@ -1,33 +1,34 @@
-import fido2
 from base64 import b64decode
-from loguru import logger
 from typing import Any
+
+import fido2
+import sqlalchemy as sa
 from fastapi import (
     APIRouter,
-    Request,
-    Response,
     Body,
     Depends,
     HTTPException,
-    security,
     Path,
+    Request,
+    Response,
+    security,
     status,
 )
-import sqlalchemy as sa
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from .. import schemas, deps, crud, models
+
+from .. import crud, deps, models, schemas
 from ..core.security import (
+    create_access_token,
+    fido2server,
     get_password_hash,
     verify_password,
-    create_access_token,
     webauthn_state,
-    fido2server,
 )
-from ..core.utils import (
+from ..core.utils import (  # send_reset_password_email,
     generate_password_reset_token,
-    # send_reset_password_email,
-    verify_password_reset_token,
     generate_webauthn_state_token,
+    verify_password_reset_token,
     verify_webauthn_staten_token,
 )
 

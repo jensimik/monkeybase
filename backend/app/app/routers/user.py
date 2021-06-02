@@ -1,11 +1,14 @@
 import io
-from typing import List, Any
-from loguru import logger
-from .. import deps, schemas, models, crud
-import sqlalchemy as sa
+from typing import Any, List
+
 import looms
+import sqlalchemy as sa
+from fastapi import APIRouter, Depends, Response, Security, status
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Security, Response, status
+
+from .. import crud, deps, models, schemas
+from ..core.security import get_password_hash
 
 router = APIRouter()
 
@@ -41,8 +44,6 @@ async def user_list(
         if q.q
         else []
     )
-
-    logger.info(f"per page is {paging.per_page}")
 
     return await crud.user.get_multi_page(
         db,
@@ -80,6 +81,20 @@ async def read_user_by_id(
             )
         ],
     )
+
+
+@router.post("", response_model=schemas.User)
+async def create_user(
+    create: schemas.UserCreate,
+    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    obj_in = create.dict(exclude_unset=True)
+    password = obj_in.pop("password")
+    obj_in["hashed_password"] = get_password_hash(password)
+    user = await crud.user.create(db, obj_in=obj_in)
+    await db.commit()
+    return user
 
 
 @router.patch("/{user_id}", response_model=schemas.User)

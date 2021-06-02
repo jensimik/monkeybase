@@ -1,10 +1,11 @@
-import sqlalchemy as sa
 import datetime
+from typing import Any, List, Optional
+
+import sqlalchemy as sa
+from app import crud, deps, models, schemas
 from app.models_utils import SlotTypeEnum
-from typing import List, Any, Optional
-from app import deps, schemas, models, crud
+from fastapi import APIRouter, Depends, HTTPException, Security
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, Security, HTTPException
 
 router = APIRouter()
 

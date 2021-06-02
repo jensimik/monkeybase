@@ -1,8 +1,8 @@
 # type: ignore
 
 from functools import partial
-from loguru import logger
 
+from loguru import logger
 from sqlakeyset.columns import find_order_key, parse_ob_clause
 from sqlakeyset.paging import Page, Paging, process_args, where_condition_for_page
 from sqlakeyset.sqla import group_by_clauses

@@ -1,23 +1,19 @@
 import asyncio
 import datetime
 import pathlib
-from loguru import logger
-from starlette.middleware.cors import CORSMiddleware
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
+from starlette.middleware.cors import CORSMiddleware
+
+from . import crud, deps, models
 from .core.config import settings
 from .core.custom_swagger import get_swagger_ui_html
 from .cron import repeat_at
-from . import crud, models, deps
 
 # routes
-from .routers import auth
-from .routers import user
-from .routers import me
-from .routers import member_type
-from .routers import member
-from .routers import webauthn
-from .routers import door
+from .routers import auth, door, me, member, member_type, user, webauthn
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 

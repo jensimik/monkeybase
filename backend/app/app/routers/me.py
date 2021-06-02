@@ -1,9 +1,11 @@
-import sqlalchemy as sa
 from typing import Any
-from loguru import logger
-from .. import deps, schemas, models, crud
-from sqlalchemy.ext.asyncio import AsyncSession
+
+import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .. import crud, deps, models, schemas
 from .user import _delete_user
 
 router = APIRouter()
