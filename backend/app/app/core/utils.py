@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional
+
 import emails
 from emails.template import JinjaTemplate
-from loguru import logger
 from jose import jwt
+from loguru import logger
+
 from .. import models
 from .config import settings
 
@@ -29,7 +31,7 @@ def send_email(
     if settings.SMTP_PASSWORD:
         smtp_options["password"] = settings.SMTP_PASSWORD
     response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logging.info(f"send email result: {response}")
+    logger.info(f"send email result: {response}")
 
 
 def send_test_email(email_to: str) -> None:
