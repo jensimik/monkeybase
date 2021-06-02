@@ -55,7 +55,7 @@ def test_get_users_page_size(auth_client_admin: TestClient):
     assert len(data["items"]) == 10
 
 
-def test_create_user(auth_client_admin: TestClient):
+def test_create_user(auth_client_admin: TestClient, client: TestClient):
     new_user_dict = {
         "name": "new user",
         "email": "test-create-user@test.dk",
@@ -68,7 +68,17 @@ def test_create_user(auth_client_admin: TestClient):
     data = response.json()
 
     for x in ["name", "email", "birthday"]:
-        assert data[x] == new_user_dict[x]
+        assert data[x] == str(new_user_dict[x])
+
+    # test login this new user
+    response = client.post(
+        "/auth/token",
+        data={
+            "username": new_user_dict["email"],
+            "password": new_user_dict["password"],
+        },
+    )
+    assert response.status_code == 200
 
 
 @pytest.mark.parametrize(
