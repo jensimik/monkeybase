@@ -2,3 +2,6 @@ pytest
 
 # generate fake fixtures data
 faker
+
+fastapi
+uvicorn[standard]
