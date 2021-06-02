@@ -1,4 +1,5 @@
 pytest
+pytest-asyncio
 
 # generate fake fixtures data
 faker
