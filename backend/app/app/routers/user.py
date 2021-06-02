@@ -83,7 +83,7 @@ async def read_user_by_id(
     )
 
 
-@router.post("", response_model=schemas.User)
+@router.post("", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 async def create_user(
     create: schemas.UserCreate,
     _: int = Security(deps.get_current_user_id, scopes=["admin"]),

@@ -50,7 +50,13 @@ async def get_member_type(
     """
     Get a member type
     """
-    return await crud.member_type.get(db, models.MemberType.id == member_type_id)
+    if member_type := await crud.member_type.get(
+        db, models.MemberType.id == member_type_id
+    ):
+        return member_type
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="membertype not found"
+    )
 
 
 @router.patch("/{member_type_id}", response_model=schemas.MemberType)
@@ -62,9 +68,11 @@ async def update_member_type(
 ):
     """update a member_type"""
 
-    return await crud.member_type.update(
+    member_type = await crud.member_type.update(
         db, models.MemberType.id == member_type_id, obj_in=update
     )
+    await db.commit()
+    return member_type
 
 
 @router.delete("/{member_type_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -76,6 +84,7 @@ async def delete_memeber_type(
     """disable a member_type"""
 
     await crud.member_type.remove(db, models.MemberType.id == member_type_id)
+    await db.commit()
 
 
 @router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.MemberTypeSlot)

@@ -44,6 +44,24 @@ def test_auth_basic(user_basic: models.User, client: TestClient):
     assert payload["sub"] == str(user_basic.id)
 
 
+def test_auth_admin(user_admin: models.User, client: TestClient):
+
+    response = client.post(
+        "/auth/token", data={"username": user_admin.email, "password": "admin"}
+    )
+    assert response.status_code == 200
+    access_token = response.json()
+    assert set(access_token.keys()) == set(["access_token", "token_type"])
+
+    payload = jwt.decode(
+        access_token["access_token"], settings.SECRET_KEY, algorithms=[ALGORITHM]
+    )
+
+    assert payload["scopes"] == ["basic", "admin"]
+
+    assert payload["sub"] == str(user_admin.id)
+
+
 def test_auth_basic_fail(client: TestClient):
     response = client.post(
         "/auth/token", data={"username": "non-existant@email.dk", "password": "basic"}

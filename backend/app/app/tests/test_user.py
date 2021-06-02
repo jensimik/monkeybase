@@ -2,13 +2,14 @@ import datetime
 
 import pytest
 from app import models
+from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
 
 def test_get_users(auth_client_admin: TestClient):
     response = auth_client_admin.get("/users")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
 
@@ -48,7 +49,7 @@ def test_get_users(auth_client_admin: TestClient):
 
 def test_get_users_page_size(auth_client_admin: TestClient):
     response = auth_client_admin.get("/users", params={"per_page": 10})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
 
@@ -63,7 +64,7 @@ def test_create_user(auth_client_admin: TestClient, client: TestClient):
         "birthday": datetime.date.today(),
     }
     response = auth_client_admin.post("/users", json=jsonable_encoder(new_user_dict))
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_201_CREATED
 
     data = response.json()
 
@@ -78,7 +79,7 @@ def test_create_user(auth_client_admin: TestClient, client: TestClient):
             "password": new_user_dict["password"],
         },
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize(
@@ -92,4 +93,4 @@ def test_no_access(c: TestClient, user_basic: models.User):
         c.post("/users", json={"name": "new user"}),
         c.delete(f"/users/{user_basic.id}"),
     ]:
-        assert response.status_code == 401
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
