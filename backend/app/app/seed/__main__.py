@@ -62,7 +62,7 @@ async def seed_data():
             )
             await conn.execute(q)
 
-        for _ in range(100):
+        for _ in range(20):
             q = sa.insert(User).values(
                 {
                     "name": fake.name(),
@@ -72,7 +72,7 @@ async def seed_data():
                 }
             )
             await conn.execute(q)
-        for x in range(5, 20):
+        for x in range(5, 10):
             q = sa.insert(Member).values(
                 {
                     "user_id": x,
