@@ -1,6 +1,6 @@
 pytest
 pytest-asyncio
-pytest-lazy-fixtures
+pytest-lazy-fixture
 
 # generate fake fixtures data
 faker
