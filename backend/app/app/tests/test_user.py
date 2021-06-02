@@ -56,22 +56,19 @@ def test_get_users_page_size(auth_client_admin: TestClient):
 
 
 def test_create_user(auth_client_admin: TestClient):
-    response = auth_client_admin.post(
-        "/users",
-        json=jsonable_encoder(
-            {
-                "name": "new user",
-                "email": "test-create-user@test.dk",
-                "password": "humn",
-                "birthday": datetime.date.today(),
-            }
-        ),
-    )
+    new_user_dict = {
+        "name": "new user",
+        "email": "test-create-user@test.dk",
+        "password": "humn",
+        "birthday": datetime.date.today(),
+    }
+    response = auth_client_admin.post("/users", json=jsonable_encoder(new_user_dict))
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data == False
+    for x in ["name", "email", "birthday"]:
+        assert data[x] == new_user_dict[x]
 
 
 @pytest.mark.parametrize(
