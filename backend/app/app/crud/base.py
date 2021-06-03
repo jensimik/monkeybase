@@ -120,9 +120,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: AsyncSession, obj_in: Union[CreateSchemaType, Dict[str, Any]]
     ) -> ModelType:
         values = obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
-        query = sa.insert(self.model).values(**values).returning(self.model.id)
-        obj_id = (await db.execute(query)).scalar_one()
-        return await self.get(db, self.model.id == obj_id)
+        query = sa.insert(self.model).values(**values).returning(self.model)
+        # using select.from_statement to load the insert into returning into a object
+        query = sa.select(self.model).from_statement(query)
+        return (await db.execute(query)).scalar_one()
 
     async def update(
         self,
@@ -140,15 +141,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.where(self.model.active == True, *args)
         else:
             query = query.where(*args)
-        query = query.returning(self.model.id)
-        res = await db.execute(query)
-        # TODO: returning in sqlalchemy doesnt seem to work currently on ORM objects?
-        # so for now just select the updated objects again and return them
+        query = query.returning(self.model)
+        query = sa.select(self.model).from_statement(query)
         if multi:
-            return await self.get_multi(
-                db, self.model.id.in_(res.scalars().all()), only_active=False
-            )
-        return await self.get(db, self.model.id == res.scalar_one(), only_active=False)
+            return (await db.execute(query)).scalar().all()
+        return (await db.execute(query)).scalar_one()
 
     async def remove(self, db: AsyncSession, *args, actual_delete=False) -> ModelType:
         if actual_delete:
