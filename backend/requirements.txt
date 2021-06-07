@@ -12,7 +12,9 @@ fido2
 # db
 asyncpg
 psycopg2-binary
-sqlalchemy
+# use this sqlalchemy commit until it is rolled out in next release
+git+git://github.com/sqlalchemy/sqlalchemy.git@9416910#egg=sqlalchemy
+# sqlalchemy
 alembic
 sqlakeyset
 

@@ -1,7 +1,7 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim
 # use -slim and not -alpine as then wheel packages work
 
-# RUN apt-get update && apt-get -y install git
+RUN apt-get update && apt-get -y install git
 
 WORKDIR /app/
 

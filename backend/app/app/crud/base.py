@@ -126,11 +126,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         values = obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         query = sa.insert(self.model).values(**values)
-        # hack to fix those with polymorphic :-/
-        if hasattr(self.model, "__mapper_args__"):
-            id = (await db.execute(query.returning(self.model.id))).scalar_one()
-            return await self.get(db, self.model.id == id)
-
         # using select.from_statement to load the insert returning into a object
         query = sa.select(self.model).from_statement(query.returning(self.model))
         return (await db.execute(query)).scalar_one()
@@ -151,18 +146,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.where(self.model.active == True, *args)
         else:
             query = query.where(*args)
-
-        # hack to fix those with polymorphic :-/
-        if hasattr(self.model, "__mapper_args__"):
-            query = query.returning(self.model.id)
-            if multi:
-                ids = (await db.execute(query)).scalars().all()
-                return await self.get_multi(db, self.model.id.in_(ids))
-            id = (await db.execute(query)).scalar_one()
-            return await self.get(db, self.model.id == id)
-
-        query = query.returning(self.model)
-        query = sa.select(self.model).from_statement(query)
+        query = sa.select(self.model).from_statement(query.returning(self.model))
         if multi:
             return (await db.execute(query)).scalar().all()
         return (await db.execute(query)).scalar_one()
