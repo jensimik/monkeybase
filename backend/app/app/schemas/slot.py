@@ -4,24 +4,24 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ..models_utils import SlotTypeEnum
+from ..utils.models_utils import SlotTypeEnum
 
 
 # Shared properties
-class MemberTypeSlotBase(BaseModel):
+class SlotBase(BaseModel):
     active: Optional[bool] = True
 
 
 # Properties to receive via API on creation
-class MemberTypeSlotCreate(MemberTypeSlotBase):
+class SlotCreate(SlotBase):
     slot_type: SlotTypeEnum
     reserved_until: datetime
     user_id: int
-    member_type_id: int
+    product_id: int
 
 
 # Properties to receive via API on update
-class MemberTypeSlotUpdate(MemberTypeSlotBase):
+class SlotUpdate(SlotBase):
     active: Optional[bool] = True
     name: Optional[str] = None
     slots_available: Optional[int] = None
@@ -29,12 +29,12 @@ class MemberTypeSlotUpdate(MemberTypeSlotBase):
     open_wait: Optional[bool] = False
 
 
-class MemberTypeSlotInDBBase(MemberTypeSlotBase):
+class SlotInDBBase(SlotBase):
     id: int
     slot_type: SlotTypeEnum
     reserved_until: datetime
     user_id: int
-    member_type_id: int
+    product_id: int
     key: UUID
     active: bool
     created_at: datetime
@@ -45,10 +45,10 @@ class MemberTypeSlotInDBBase(MemberTypeSlotBase):
 
 
 # Additional properties to return via API
-class MemberTypeSlot(MemberTypeSlotInDBBase):
+class Slot(SlotInDBBase):
     pass
 
 
 # Additional properties stored in DB
-class MemberTypeSlotInDB(MemberTypeSlotInDBBase):
+class SlotInDB(SlotInDBBase):
     pass

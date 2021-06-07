@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core import stripe
-from ..models_utils import SlotTypeEnum
+from ..utils.models_utils import SlotTypeEnum
 
 router = APIRouter()
 
@@ -83,11 +83,17 @@ async def delete_memeber_type(
 ):
     """disable a member_type"""
 
+    if await crud.member.count(db, models.Member.product_id == member_type_id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="cannot disable member_type when active members on it",
+        )
+
     await crud.member_type.remove(db, models.MemberType.id == member_type_id)
     await db.commit()
 
 
-@router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.MemberTypeSlot)
+@router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.Slot)
 async def reserve_a_slot(
     member_type_id: int,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
@@ -106,34 +112,34 @@ async def reserve_a_slot(
 
     # first try to get a reservation in my name - usually from a waiting list
     # but can also be from a previous reservation if accidential hit page-refresh
-    if slot := await crud.member_type_slot.get(
+    if slot := await crud.slot.get(
         db,
-        models.MemberTypeSlot.member_type_id == member_type_id,
-        models.MemberTypeSlot.user_id == user.id,
-        models.MemberTypeSlot.reserved_until > datetime.datetime.utcnow(),
+        models.Slot.product_id == member_type_id,
+        models.Slot.user_id == user.id,
+        models.Slot.reserved_until > datetime.datetime.utcnow(),
     ):
         return slot
     # then try to get an open slot if any available
-    if slot := await crud.member_type_slot.get(
+    if slot := await crud.slot.get(
         db,
-        models.MemberTypeSlot.member_type_id == member_type_id,
-        models.MemberTypeSlot.slot_type == SlotTypeEnum.OPEN,
-        models.MemberTypeSlot.reserved_until < datetime.datetime.utcnow(),
-        order_by=[models.MemberTypeSlot.reserved_until.asc()],
+        models.Slot.product_id == member_type_id,
+        models.Slot.slot_type == SlotTypeEnum.OPEN,
+        models.Slot.reserved_until < datetime.datetime.utcnow(),
+        order_by=[models.Slot.reserved_until.asc()],
         limit=True,
         for_update=True,
         skip_locked=True,
     ):
         # the slot is now locked in db (for_update=True) until commit or rollback
         # we update it with this users user_id and set reserved_until 30 minutes in future
-        slot = await crud.member_type_slot.update(
+        slot = await crud.slot.update(
             db,
-            models.MemberTypeSlot.id == slot.id,
-            obj_in={
-                models.MemberTypeSlot.user_id.name: user.id,
-                models.MemberTypeSlot.reserved_until.name: datetime.datetime.utcnow()
+            models.Slot.id == slot.id,
+            obj_in=schemas.SlotUpdate(
+                user_id=user.id,
+                reserved_until=datetime.datetime.utcnow()
                 + datetime.timedelta(minutes=30),
-            },
+            ),
         )
         await db.commit()
 

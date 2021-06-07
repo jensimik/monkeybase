@@ -23,11 +23,9 @@ async def read_user_me(
         db,
         models.User.id == user_id,
         options=[
-            sa.orm.subqueryload(
+            sa.orm.selectinload(
                 models.User.member.and_(models.Member.active == True)
-            ).subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            )
+            ).selectinload(models.Member.product.and_(models.Product.active == True))
         ],
     )
 
@@ -42,12 +40,8 @@ async def update_user_me(
     Update own user.
     """
     user = await crud.user.update(db, models.User.id == current_user_id, obj_in=update)
-    try:
-        await db.commit()
-        return user
-    except sa.exc.IntegrityError as ex:
-        await db.rollback()
-        raise ex
+    await db.commit()
+    return user
 
 
 @router.delete("")
@@ -71,9 +65,10 @@ async def member_list(
         db,
         models.Member.user_id == user_id,
         options=[
-            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
-            sa.orm.subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
+            sa.orm.selectinload(
+                models.Member.user.and_(models.User.active == True)
+            ).sa.orm.selectinload(
+                models.Member.product.and_(models.Product.active == True)
             ),
         ],
         per_page=paging.per_page,

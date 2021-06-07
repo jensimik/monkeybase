@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.config import settings
-from ..models_utils import DoorAccessEnum
+from ..utils.models_utils import DoorAccessEnum
 
 router = APIRouter()
 

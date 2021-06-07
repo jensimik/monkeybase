@@ -53,7 +53,7 @@ class MemberUser(MemberInDBBase):
 
 
 class MemberMemberType(MemberInDBBase):
-    member_type: "Optional[MemberType]" = None
+    product: "Optional[MemberType]" = None
 
 
 # Additional properties stored in DB

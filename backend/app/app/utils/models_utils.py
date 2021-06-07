@@ -47,3 +47,10 @@ class DoorAccessEnum(Enum):
     FULL = "FULL"
     MORNING = "MORNING"
     NOACCESS = "NOACCESS"
+
+
+class StripeStatusEnum(Enum):
+
+    PENDING = "PENDING"
+    CAPTURED = "CAPUTERED"
+    FAIL = "FAIL"

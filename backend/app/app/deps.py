@@ -13,6 +13,7 @@ from .core import security
 from .core.config import settings
 from .db.base import async_session
 
+
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
     scopes={

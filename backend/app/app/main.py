@@ -10,10 +10,10 @@ from starlette.middleware.cors import CORSMiddleware
 from . import crud, deps, models
 from .core.config import settings
 from .core.custom_swagger import get_swagger_ui_html
-from .cron import repeat_at
+from .utils.cron import repeat_at
 
 # routes
-from .routers import auth, door, me, member, member_type, user, webauthn
+from .routers import auth, door, me, member, member_type, user, webauthn, misc
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 
@@ -54,6 +54,7 @@ app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
 app.include_router(member.router, prefix="/members", tags=["member"])
 app.include_router(door.router, prefix="/door-access", tags=["door"])
+app.include_router(misc.router, prefix="/misc", tags=["misc"])
 
 
 @app.on_event("startup")

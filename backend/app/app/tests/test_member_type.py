@@ -16,7 +16,7 @@ def test_get_member_types(client: TestClient):
     assert data["has_next"] is False
     assert data["next"] == ""
 
-    assert len(data["items"]) == 2
+    assert len(data["items"]) >= 2
 
 
 def test_get_member_type(client: TestClient):
@@ -63,6 +63,11 @@ def test_delete_member_type(auth_client_admin: TestClient):
     response = auth_client_admin.get(f"/member_types/{id}")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # remove a member_type with members
+
+    response = auth_client_admin.delete(f"/member_types/1")
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 @pytest.mark.parametrize(

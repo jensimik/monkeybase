@@ -5,23 +5,26 @@ import random
 import datetime
 from loguru import logger
 from ..db.base import Base, engine
-from ..models import User, MemberType, Member, Webauthn, MemberTypeSlot, LockTable
+from ..models import User, MemberType, Event, Member, Webauthn, Slot, LockTable
+from .. import crud, deps, models
 from ..core.security import get_password_hash
 from faker import Faker
 
 
-async def test():
-    async with engine.begin() as conn:
-        q = sa.select(Webauthn).order_by(Webauthn.id)
-        data = await conn.execute(q)
-        print(data)
-        print(data.scalars().all())
-        print(data)
+# async def test():
+#     async with deps.get_db_context() as conn:
+#         # engine.begin() as conn:
+#         q = sa.select(User)
+#         data = await conn.execute(q)
+#         print(data)
+#         print(data.scalars().all())
 
 
 async def seed_data():
     fake = Faker()
-    async with engine.begin() as conn:
+    # async with engine.begin() as conn:
+    async with deps.get_db_context() as conn:
+        # engine.begin() as conn:
         # load uuid extension
         await conn.execute(sa.text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'))
         q = sa.insert(User).values(
@@ -29,38 +32,24 @@ async def seed_data():
                 "name": "Some Name",
                 "email": "test@test.dk",
                 "birthday": fake.date_of_birth(),
-                "hashed_password": get_password_hash("password"),
+                "hashed_password": get_password_hash("test"),
                 "scopes": "basic,admin,other",
             }
         )
         await conn.execute(q)
-        q = sa.insert(User).values(
-            {
-                "name": "Some Name",
-                "email": "test-admin@test.dk",
-                "birthday": fake.date_of_birth(),
-                "hashed_password": get_password_hash("password"),
-                "scopes": "basic,admin",
-            }
-        )
-        await conn.execute(q)
-        q = sa.insert(User).values(
-            {
-                "name": "Some Name",
-                "email": "test-basic@test.dk",
-                "birthday": fake.date_of_birth(),
-                "hashed_password": get_password_hash("password"),
-                "scopes": "basic",
-            }
-        )
-        await conn.execute(q)
         for x in ["Full membership", "Morning membership"]:
-            q = sa.insert(MemberType).values(
-                {
-                    "name": x,
-                }
-            )
+            q = sa.insert(MemberType).values({"name": x, "obj_type": "member_type"})
             await conn.execute(q)
+
+        for x in ["Event 1", "Event 2"]:
+            q = sa.insert(MemberType).values({"name": x, "obj_type": "event"})
+            await conn.execute(q)
+
+        q = sa.select(MemberType).where(MemberType.name == "Full membership")
+        full_membership = (await conn.execute(q)).scalar_one()
+
+        q = sa.select(Event).where(Event.name == "Event 1")
+        event_1 = (await conn.execute(q)).scalar_one()
 
         for _ in range(100):
             q = sa.insert(User).values(
@@ -72,11 +61,11 @@ async def seed_data():
                 }
             )
             await conn.execute(q)
-        for x in range(5, 100):
+        for x in range(1, 80):
             q = sa.insert(Member).values(
                 {
                     "user_id": x,
-                    "member_type_id": 1,
+                    "product_id": full_membership.id,
                     "date_start": fake.date_this_year(
                         before_today=True, after_today=False
                     ),
@@ -87,10 +76,20 @@ async def seed_data():
             )
             await conn.execute(q)
 
+        q = sa.insert(Member).values(
+            {
+                "user_id": 1,
+                "product_id": event_1.id,
+                "date_start": fake.date_this_year(before_today=True, after_today=False),
+                "date_end": fake.date_this_year(before_today=False, after_today=True),
+            }
+        )
+        await conn.execute(q)
+
         for x in range(5):
-            q = sa.insert(MemberTypeSlot).values(
+            q = sa.insert(Slot).values(
                 {
-                    "member_type_id": 1,
+                    "product_id": full_membership.id,
                     "slot_type": "OPEN",
                     "reserved_until": datetime.datetime.utcnow(),
                 }
@@ -100,6 +99,10 @@ async def seed_data():
         q = sa.insert(LockTable).values({"name": "crontest"})
         await conn.execute(q)
 
+        q = sa.select(User).where(User.id == 1)
+
+        print((await conn.execute(q)).scalar_one())
+
         await conn.commit()
 
 
@@ -108,6 +111,25 @@ async def init_models():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     await seed_data()
+
+
+async def test():
+    async with deps.get_db_context() as db:
+        user = await crud.user.get(
+            db,
+            models.User.id == 1,
+            options=[
+                sa.orm.selectinload(
+                    models.User.member.and_(models.Member.active == True)
+                ).selectinload(
+                    models.Member.product.and_(models.Product.active == True)
+                )
+            ],
+        )
+        print(user)
+        for member in user.member:
+            print(member)
+            print(member.product)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 import io
+from os import stat
 from typing import Any, List
 
 import looms
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Response, Security, status
+from fastapi import APIRouter, Depends, Response, Security, status, HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,14 +14,18 @@ from ..core.security import get_password_hash
 router = APIRouter()
 
 
-async def _delete_user(db, user_id):
-    # actually just set active == False
+async def _delete_user(db: AsyncSession, user_id: int):
+    active_memberships = await crud.member.get_multi(
+        db, models.Member.user_id == user_id
+    )
+    if active_memberships:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="cannot disable user with active membership",
+        )
+
     await crud.user.remove(db, models.User.id == user_id)
-
-    # TODO: also disable/release any memberships this user have?
-    # or instead reject delete until unsubscribed any memberships? (probably better)
-
-    return True
+    await db.commit()
 
 
 @router.get("", response_model=schemas.Page[schemas.User])
@@ -50,9 +55,7 @@ async def user_list(
         options=[
             sa.orm.selectinload(
                 models.User.member.and_(models.Member.active == True)
-            ).selectinload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            )
+            ).selectinload(models.Member.product.and_(models.Product.active == True))
         ],
         *args,
         page=paging.page,
@@ -76,9 +79,7 @@ async def read_user_by_id(
         options=[
             sa.orm.subqueryload(
                 models.User.member.and_(models.Member.active == True)
-            ).subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            )
+            ).subqueryload(models.Member.product.and_(models.Product.active == True))
         ],
     )
 

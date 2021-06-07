@@ -9,12 +9,7 @@ from .member import (
     MemberUser,
 )
 from .member_type import MemberType, MemberTypeCreate, MemberTypeInDB, MemberTypeUpdate
-from .member_type_slot import (
-    MemberTypeSlot,
-    MemberTypeSlotCreate,
-    MemberTypeSlotInDB,
-    MemberTypeSlotUpdate,
-)
+from .slot import Slot, SlotCreate, SlotInDB, SlotUpdate
 from .msg import Msg
 from .page import Page
 from .token import Token, TokenPayload

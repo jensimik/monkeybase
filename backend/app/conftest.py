@@ -76,36 +76,29 @@ def client():
 
 
 @pytest.fixture(scope="session")
-def client_admin():
-    yield TestClient(app)
+def auth_client_basic(user_basic: models.User):
 
-
-@pytest.fixture(scope="session")
-def client_basic():
-    yield TestClient(app)
-
-
-@pytest.fixture(scope="session")
-def auth_client_basic(client_basic: TestClient, user_basic: models.User):
-
-    response = client_basic.post(
+    c = TestClient(app)
+    response = c.post(
         "/auth/token", data={"username": user_basic.email, "password": "basic"}
     )
     access_token = response.json()
     token = access_token["access_token"]
-    client_basic.headers.update({"Authorization": f"bearer {token}"})
+    c.headers.update({"Authorization": f"bearer {token}"})
 
-    yield client_basic
+    yield c
 
 
 @pytest.fixture(scope="session")
-def auth_client_admin(client_admin: TestClient, user_admin: models.User):
+def auth_client_admin(user_admin: models.User):
 
-    response = client_admin.post(
+    c = TestClient(app)
+
+    response = c.post(
         "/auth/token", data={"username": user_admin.email, "password": "admin"}
     )
     access_token = response.json()
     token = access_token["access_token"]
-    client_admin.headers.update({"Authorization": f"bearer {token}"})
+    c.headers.update({"Authorization": f"bearer {token}"})
 
-    yield client_admin
+    yield c

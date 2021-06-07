@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 from app import models
+from faker import Faker
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
@@ -13,9 +14,8 @@ def test_get_users(auth_client_admin: TestClient):
 
     data = response.json()
 
-    assert "has_next" in data
-
-    assert "next" in data
+    assert data["has_next"] is True
+    assert data["next"] != ""
 
     assert "items" in data
 
@@ -30,7 +30,7 @@ def test_get_users(auth_client_admin: TestClient):
     assert "date_start" in member
     assert "date_end" in member
 
-    member_type = member["member_type"]
+    member_type = member["product"]
 
     assert "name" in member_type
 
@@ -57,11 +57,12 @@ def test_get_users_page_size(auth_client_admin: TestClient):
 
 
 def test_create_user(auth_client_admin: TestClient, client: TestClient):
+    faker = Faker()
     new_user_dict = {
-        "name": "new user",
-        "email": "test-create-user@test.dk",
-        "password": "humn",
-        "birthday": datetime.date.today(),
+        "name": faker.name(),
+        "email": faker.email(),
+        "password": faker.password(),
+        "birthday": faker.date_of_birth(),
     }
     response = auth_client_admin.post("/users", json=jsonable_encoder(new_user_dict))
     assert response.status_code == status.HTTP_201_CREATED

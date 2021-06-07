@@ -1,12 +1,11 @@
-import datetime
-
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 
 from .db import Base
-from .models_utils import (
+from .utils.models_utils import (
     DoorAccessEnum,
     SlotTypeEnum,
+    StripeStatusEnum,
     TimestampableMixin,
     gen_uuid,
     utcnow,
@@ -28,8 +27,11 @@ class User(TimestampableMixin, Base):
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     enabled_2fa = sa.Column(sa.Boolean, nullable=False, default=False)
     member = sa.orm.relationship("Member", back_populates="user", lazy="noload")
-    payment = sa.orm.relationship("Payment", back_populates="user", lazy="noload")
     webauthn = sa.orm.relationship("Webauthn", back_populates="user", lazy="noload")
+    slot = sa.orm.relationship("Slot", back_populates="user", lazy="noload")
+    waiting_list = sa.orm.relationship(
+        "WaitingList", back_populates="user", lazy="noload"
+    )
 
 
 class Webauthn(TimestampableMixin, Base):
@@ -51,56 +53,57 @@ class Member(TimestampableMixin, Base):
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
-    member_type_id = sa.Column(
-        sa.Integer, sa.ForeignKey("member_type.id"), primary_key=True
-    )
+    product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"), primary_key=True)
     date_start = sa.Column(sa.Date, nullable=False)
     date_end = sa.Column(sa.Date, nullable=False)
     active = sa.orm.column_property(date_end > sa.func.now())
     user = sa.orm.relationship("User", back_populates="member", lazy="noload")
-    member_type = sa.orm.relationship(
-        "MemberType", back_populates="member", lazy="noload"
-    )
-    # payment_id = sa.Column(sa.Integer, sa.ForeignKey("payment.id"), nullable=False)
-    # payment = sa.orm.relationship("Payment")
+    product = sa.orm.relationship("Product", back_populates="member", lazy="noload")
+    stripe_id = sa.Column(sa.String)
 
 
-# class Waitinglist(TimestampableMixin, Base):
-#     __tablename__ = "membership_waitinglist"
-
-#     id = sa.Column(sa.Integer, autoincrement=True, primary_key=True, index=True)
-#     user_id = sa.Column(sa.Integer, sa.ForeignKey("users.id"), primary_key=True)
-#     membership_type_id = sa.Column(
-#         sa.Integer, sa.ForeignKey("membership_types.id"), primary_key=True
-#     )
-#     active = sa.Column(sa.Boolean, default=False, nullable=False)
-#     user = sa.orm.relationship("User", back_populates="membership_waiting")
-#     membership_type = sa.orm.relationship(
-#         "MembershipType", back_populates="user_waiting"
-#     )
-
-
-class MemberType(TimestampableMixin, Base):
-    """Model for member types"""
-
-    __tablename__ = "member_type"
+class Product(TimestampableMixin, Base):
+    __tablename__ = "product"
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
+    obj_type = sa.Column(sa.String, index=True)
     name = sa.Column(sa.String, nullable=False)
+    description = sa.Column(sa.Text)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     slot_limit = sa.Column(sa.Integer, default=0, nullable=False)
-    slot_enabled = sa.Column(sa.Boolean, default=True, nullable=False)
-    door_access = sa.Column(
-        sa_pg.ENUM(DoorAccessEnum), nullable=False, default=DoorAccessEnum.NOACCESS
-    )
     price = sa.Column(sa.Integer, default=0, nullable=False)  # price in cents
-    member = sa.orm.relationship("Member", back_populates="member_type", lazy="noload")
+    member = sa.orm.relationship("Member", back_populates="product", lazy="noload")
+    slot = sa.orm.relationship("Slot", back_populates="product", lazy="noload")
+    waiting_list = sa.orm.relationship(
+        "WaitingList", back_populates="product", lazy="noload"
+    )
+
+    __mapper_args__ = {"polymorphic_identity": "product", "polymorphic_on": obj_type}
 
 
-class MemberTypeSlot(TimestampableMixin, Base):
-    """model for available slots for a membertype"""
+class MemberType(Product):
+    """Model for membership"""
 
-    __tablename__ = "member_type_slot"
+    door_access = sa.Column(sa_pg.ENUM(DoorAccessEnum), default=DoorAccessEnum.NOACCESS)
+
+    __mapper_args__ = {
+        "polymorphic_identity": "member_type",
+        "polymorphic_load": "selectin",
+    }
+
+
+class Event(Product):
+    date_signup_deadline = sa.Column(sa.DateTime)
+    date_start = sa.Column(sa.DateTime)
+    date_end = sa.Column(sa.DateTime)
+
+    __mapper_args__ = {"polymorphic_identity": "event", "polymorphic_load": "selectin"}
+
+
+class Slot(Base, TimestampableMixin):
+    """model for available generic slots"""
+
+    __tablename__ = "slot"
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
@@ -109,40 +112,27 @@ class MemberTypeSlot(TimestampableMixin, Base):
         sa_pg.ENUM(SlotTypeEnum), nullable=False, default=SlotTypeEnum.OPEN
     )
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
+    stripe_id = sa.Column(sa.String)
+    stripe_status = sa.Column(
+        sa_pg.ENUM(StripeStatusEnum), nullable=False, default=StripeStatusEnum.PENDING
+    )
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=True)
-    member_type_id = sa.Column(sa.Integer, sa.ForeignKey("member_type.id"))
+    product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"))
+    user = sa.orm.relationship("User", back_populates="slot", lazy="noload")
+    product = sa.orm.relationship("Product", back_populates="slot", lazy="noload")
 
 
-# class Participant(TimestampableMixin, Base):
-#     __tablename__ = "participant"
+class WaitingList(TimestampableMixin, Base):
+    __tablename__ = "waiting_list"
 
-#     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
-#     event_id = sa.Column(sa.Integer, sa.ForeignKey("event.id"), primary_key=True)
-#     payment_id = sa.Column(sa.Integer, nullable=True)
-#     user = sa.orm.relationship("User", back_populates="participant")
-#     event = sa.orm.relationship("Event", back_populates="participant")
-
-
-# class Event(TimestampableMixin, Base):
-#     __tablename__ = "event"
-
-#     id = sa.Column(
-#         sa.Integer, sa.Identity(start=1, increment=1), primary_key=True, index=True
-#     )
-#     name = sa.Column(sa.String, nullable=False)
-#     slots_available = sa.Column(sa.Integer, default=0, nullable=False)
-
-
-class Payment(TimestampableMixin, Base):
-    __tablename__ = "payment"
-
-    id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
-    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=False)
-    amount = sa.Column(sa.Integer, nullable=False)  # in cents
-    reserved = sa.Column(sa.Boolean, default=False, nullable=False)
-    captured = sa.Column(sa.Boolean, default=False, nullable=False)
-    stripe_id = sa.Column(sa.String, nullable=True)
-    user = sa.orm.relationship("User", back_populates="payment", lazy="noload")
+    id = sa.Column(sa.Integer, autoincrement=True, primary_key=True, index=True)
+    active = sa.Column(sa.Boolean, default=False, nullable=False)
+    user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
+    user = sa.orm.relationship("User", back_populates="waiting_list", lazy="noload")
+    product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"))
+    product = sa.orm.relationship(
+        "Product", back_populates="waiting_list", lazy="noload"
+    )
 
 
 class Doorevent(Base):
