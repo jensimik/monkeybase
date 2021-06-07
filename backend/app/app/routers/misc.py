@@ -1,10 +1,10 @@
 import datetime
+from typing import Any, Dict, List
 
 import aiohttp
 from dateutil.relativedelta import MO, SU, relativedelta
 from fastapi import APIRouter, Depends
 from loguru import logger
-from typing import List, Dict, Any
 
 from .. import deps
 
@@ -21,8 +21,8 @@ async def opening_hours(
     date_from = "{:%Y-%m-%d}".format(
         datetime.date.today() + relativedelta(weekday=MO(-1))
     )
-    date_to = "{:%Y-%m-%d}".format(
-        datetime.date.today() + relativedelta(weekday=SU(-1))
-    )
-    async with session.get(URL.format(date_from=date_from, date_to=date_to)) as resp:
+    date_to = "{:%Y-%m-%d}".format(datetime.date.today() + relativedelta(weekday=SU))
+    url = URL.format(date_from=date_from, date_to=date_to)
+    logger.info(url)
+    async with session.get(url) as resp:
         return await resp.json()
