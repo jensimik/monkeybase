@@ -14,7 +14,7 @@ class CRUDMemberType(CRUDBase[MemberType, MemberTypeCreate, MemberTypeUpdate]):
     ) -> MemberType:
         # ensure obj_type is set as insert doesnt seem to handle this on poly
         values = obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
-        values["obj_type"] = "member_type"
+        values["obj_type"] = self.model.__mapper_args__["polymorphic_identity"]
         return await super().create(db, obj_in=values)
 
     async def update(
@@ -25,12 +25,28 @@ class CRUDMemberType(CRUDBase[MemberType, MemberTypeCreate, MemberTypeUpdate]):
         multi: Optional[bool] = False,
         only_active: Optional[bool] = True,
     ) -> MemberType:
-        # ensure obj_type is set as insert doesnt seem to handle this on poly
-        upd_dict = (
-            obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
-        )
+        # ensure obj_type is an arg
         return await super().update(
-            db, *args, multi=multi, only_active=only_active, obj_in=upd_dict
+            db,
+            self.model.obj_type == self.model.__mapper_args__["polymorphic_identity"],
+            *args,
+            multi=multi,
+            only_active=only_active,
+            obj_in=obj_in,
+        )
+
+    async def remove(
+        self,
+        db: AsyncSession,
+        *args: List[sa.sql.elements.BinaryExpression],
+        actual_delete: Optional[bool] = False,
+    ) -> MemberType:
+        # ensure obj_type is an arg
+        return await super().remove(
+            db,
+            self.model.obj_type == self.model.__mapper_args__["polymorphic_identity"],
+            *args,
+            actual_delete=actual_delete,
         )
 
 
