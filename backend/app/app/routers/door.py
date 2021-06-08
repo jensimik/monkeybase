@@ -15,56 +15,42 @@ from ..utils.models_utils import DoorAccessEnum
 router = APIRouter()
 
 
-api_key_header = APIKeyHeader(name="access_token")
-
-
-class DoorAccess(BaseModel):
-    status: bool
+api_key_header = APIKeyHeader(name="api_key")
 
 
 class DoorAccessQuery(BaseModel):
     key: str
 
 
-async def log_door_event(
-    user_id: int,
-    db: AsyncSession = Depends(deps.get_db),
-):
-    await crud.door_event.create(db, obj_in={models.Doorevent.user_id.name: user_id})
-    await db.commit()
-
-
-@router.post("", response_model=DoorAccess)
+@router.post("", status_code=status.HTTP_204_NO_CONTENT)
 async def access_door(
     q: DoorAccessQuery,
-    background_tasks: BackgroundTasks,
     api_key: str = Security(api_key_header),
     db: AsyncSession = Depends(deps.get_db),
 ):
     if api_key != settings.DOOR_API_KEY:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="go away")
-    now = datetime.datetime.utcnow()
-    user = await crud.user.get(
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="go away")
+    if user := await crud.user.get(
         db,
         models.User.door_id == q.key,
         options=[
-            sa.orm.subqueryload(
+            sa.orm.selectinload(
                 models.User.member.and_(models.Member.active == True)
-            ).subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
-            )
+            ).selectinload(models.Member.product.and_(models.Product.active == True))
         ],
-    )
-    if user:
+    ):
+        now = datetime.datetime.utcnow()
         for member in user.member:
-            for member_type in member.member_type:
-                if any(
-                    [
-                        member_type.door_access == DoorAccessEnum.FULL,
-                        member_type.door_access == DoorAccessEnum.MORNING
-                        and (7 <= now.hour <= 16),
-                    ]
-                ):
-                    background_tasks.add_task(log_door_event, user.id)
-                    return True
-    return False
+            if not isinstance(member.product, models.MemberType):
+                continue
+            if any(
+                [
+                    member.product.door_access == DoorAccessEnum.FULL,
+                    member.product.door_access == DoorAccessEnum.MORNING
+                    and (7 <= now.hour <= 16),
+                ]
+            ):
+                await crud.door_event.create(db, obj_in={"user_id": user.id})
+                await db.commit()
+                return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

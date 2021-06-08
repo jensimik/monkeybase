@@ -9,6 +9,7 @@ from ..models import User, MemberType, Event, Member, Webauthn, Slot, LockTable
 from .. import crud, deps, models
 from ..core.security import get_password_hash
 from faker import Faker
+from ..utils.models_utils import DoorAccessEnum
 
 
 # async def test():
@@ -34,11 +35,18 @@ async def seed_data():
                 "birthday": fake.date_of_birth(),
                 "hashed_password": get_password_hash("test"),
                 "scopes": "basic,admin,other",
+                "door_id": "some-door-id",
             }
         )
         await conn.execute(q)
         for x in ["Full membership", "Morning membership"]:
-            q = sa.insert(MemberType).values({"name": x, "obj_type": "member_type"})
+            q = sa.insert(MemberType).values(
+                {
+                    "name": x,
+                    "obj_type": "member_type",
+                    "door_access": DoorAccessEnum.FULL,
+                }
+            )
             await conn.execute(q)
 
         for x in ["Event 1", "Event 2"]:
@@ -90,7 +98,6 @@ async def seed_data():
             q = sa.insert(Slot).values(
                 {
                     "product_id": full_membership.id,
-                    "slot_type": "OPEN",
                     "reserved_until": datetime.datetime.utcnow(),
                 }
             )

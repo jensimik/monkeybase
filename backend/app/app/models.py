@@ -25,6 +25,7 @@ class User(TimestampableMixin, Base):
     scopes = sa.Column(sa.String, default="basic", nullable=False)
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     enabled_2fa = sa.Column(sa.Boolean, nullable=False, default=False)
+    door_id = sa.Column(sa.String, nullable=True, index=True)
     member = sa.orm.relationship("Member", back_populates="user", lazy="noload")
     webauthn = sa.orm.relationship("Webauthn", back_populates="user", lazy="noload")
     slot = sa.orm.relationship("Slot", back_populates="user", lazy="noload")
@@ -140,7 +141,6 @@ class Doorevent(Base):
     __tablename__ = "door_event"
 
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), primary_key=True)
-    active = sa.orm.column_property(sa.func.coalesce(True))
     created_at = sa.Column(
         sa.DateTime,
         nullable=False,
