@@ -13,7 +13,18 @@ from .core.custom_swagger import get_swagger_ui_html
 from .utils.cron import repeat_at
 
 # routes
-from .routers import auth, door, me, member, member_type, user, webauthn, misc
+from .routers import (
+    auth,
+    door,
+    me,
+    member,
+    member_type,
+    slot,
+    user,
+    webauthn,
+    webhook,
+    misc,
+)
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 
@@ -52,9 +63,11 @@ app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn_2fa"])
 app.include_router(user.router, prefix="/users", tags=["user"])
 app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
+app.include_router(slot.router, prefix="/slot", tags=["slot"])
 app.include_router(member.router, prefix="/members", tags=["member"])
 app.include_router(door.router, prefix="/door-access", tags=["door"])
-app.include_router(misc.router, prefix="/misc", tags=["misc"])
+app.include_router(webhook.router, tags=["webhook"])
+app.include_router(misc.router, tags=["misc"])
 
 
 @app.on_event("startup")

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: Optional[HttpUrl] = None
 
     STRIPE_API_KEY: str = None
+    STRIPE_WEBHOOK_SECRET: str = None
 
     DOOR_API_KEY: str = "asdf1234"
 

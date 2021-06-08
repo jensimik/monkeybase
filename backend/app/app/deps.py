@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator, Optional
 
 import aiohttp
-from fastapi import Depends, HTTPException, Query, status
+import stripe
+from fastapi import Depends, Header, HTTPException, Query, Request, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import jwt
 from pydantic import ValidationError
@@ -12,7 +13,6 @@ from . import crud, models, schemas
 from .core import security
 from .core.config import settings
 from .db.base import async_session
-
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
@@ -37,6 +37,27 @@ async def get_db() -> AsyncIterator[AsyncSession]:
 async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
     async with aiohttp.ClientSession() as session:
         yield session
+
+
+async def stripe_webhook_event(
+    request: Request, stripe_signature: str = Header(...)
+) -> stripe.Event:
+    data = await request.body()
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=data,
+            sig_header=stripe_signature,
+            secret=settings.STRIPE_WEBHOOK_SECRET,
+        )
+    except ValueError as ex:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="bad payload"
+        ) from ex
+    except stripe.error.SignatureVerificationError as ex:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid signature"
+        ) from ex
+    return event
 
 
 async def get_current_user_id(

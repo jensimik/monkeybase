@@ -4,8 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from ..utils.models_utils import SlotTypeEnum
-
 
 # Shared properties
 class SlotBase(BaseModel):
@@ -14,7 +12,6 @@ class SlotBase(BaseModel):
 
 # Properties to receive via API on creation
 class SlotCreate(SlotBase):
-    slot_type: SlotTypeEnum
     reserved_until: datetime
     user_id: int
     product_id: int
@@ -31,7 +28,6 @@ class SlotUpdate(SlotBase):
 
 class SlotInDBBase(SlotBase):
     id: int
-    slot_type: SlotTypeEnum
     reserved_until: datetime
     user_id: int
     product_id: int

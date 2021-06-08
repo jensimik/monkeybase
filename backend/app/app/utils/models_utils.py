@@ -35,13 +35,6 @@ class TimestampableMixin:
     )
 
 
-class SlotTypeEnum(Enum):
-    """for member_type_slot to indicate if open registration slot or waiting list slot"""
-
-    OPEN = "OPEN"
-    WAITING = "WAITING"
-
-
 class DoorAccessEnum(Enum):
 
     FULL = "FULL"

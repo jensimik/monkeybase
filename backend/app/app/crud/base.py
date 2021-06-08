@@ -148,8 +148,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.where(*args)
         query = sa.select(self.model).from_statement(query.returning(self.model))
         if multi:
-            return (await db.execute(query)).scalar().all()
-        return (await db.execute(query)).scalar_one()
+            try:
+                return (await db.execute(query)).scalar().all()
+            except sa.exc.NoResultFound:
+                return []
+        try:
+            return (await db.execute(query)).scalar_one()
+        except sa.exc.NoResultFound:
+            return None
 
     async def remove(
         self,

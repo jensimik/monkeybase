@@ -1,48 +1,31 @@
 pydantic[email,dotenv]
 
-# JWT
-python-jose
-# crypt
+# security stuff
+python-jose>=3.3.0
 cryptography
 passlib[bcrypt]
 python-multipart
-# fido lib from yubico
 fido2
 
-# db
+# db stuff
 asyncpg
 psycopg2-binary
 # use this sqlalchemy commit until it is rolled out in next release
 git+git://github.com/sqlalchemy/sqlalchemy.git@9416910#egg=sqlalchemy
-# sqlalchemy
+# sqlalchemy>=1.4.18
 alembic
 sqlakeyset
 
-# stripe / card payments
+# integrations/api's
 stripe
-
-# requests/client-get
 aiohttp[speedups]
 
-# static files serve
-aiofiles
-
-# extra
-emails
-
-# retry library
-tenacity
-
-# identicon
-looms
-
-# for cron like repeats
-croniter
-
-# for pub/sub channels via postgres :-o
-broadcaster[postgres]
-
 # misc
+croniter
+tenacity
+looms
 python-dateutil
 loguru
-
+emails
+aiofiles
+broadcaster[postgres]

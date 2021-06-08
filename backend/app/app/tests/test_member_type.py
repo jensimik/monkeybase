@@ -19,13 +19,13 @@ def test_get_member_types(client: TestClient):
     assert len(data["items"]) >= 2
 
 
-def test_get_member_type(client: TestClient):
-    response = client.get("/member_types/1")
+def test_get_member_type(client: TestClient, member_type_id=1):
+    response = client.get(f"/member_types/{member_type_id}")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
 
-    assert data["id"] == 1
+    assert data["id"] == member_type_id
 
 
 def test_create_member_type(auth_client_admin: TestClient):
@@ -37,6 +37,8 @@ def test_create_member_type(auth_client_admin: TestClient):
 
     assert new_member_type["name"] == data["name"]
 
+    test_get_member_type(client=auth_client_admin, member_type_id=data["id"])
+
 
 def test_patch_member_type(auth_client_admin: TestClient):
     response = auth_client_admin.patch("/member_types/1", json={"name": "new name"})
@@ -45,6 +47,12 @@ def test_patch_member_type(auth_client_admin: TestClient):
     data = response.json()
 
     assert data["name"] == "new name"
+
+    # unknown id
+    response = auth_client_admin.patch(
+        "/member_types/999999", json={"name": "new name"}
+    )
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_delete_member_type(auth_client_admin: TestClient):
@@ -68,6 +76,10 @@ def test_delete_member_type(auth_client_admin: TestClient):
 
     response = auth_client_admin.delete(f"/member_types/1")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_reserve_a_slot(auth_client_basic: TestClient):
+    response = auth_client_basic.post("/member_types/1/reserve_a_slot")
 
 
 @pytest.mark.parametrize(

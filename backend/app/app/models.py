@@ -4,7 +4,6 @@ from sqlalchemy.dialects import postgresql as sa_pg
 from .db import Base
 from .utils.models_utils import (
     DoorAccessEnum,
-    SlotTypeEnum,
     StripeStatusEnum,
     TimestampableMixin,
     gen_uuid,
@@ -80,6 +79,9 @@ class Product(TimestampableMixin, Base):
 
     __mapper_args__ = {"polymorphic_identity": "product", "polymorphic_on": obj_type}
 
+    def send_welcome(self, user: User):
+        pass
+
 
 class MemberType(Product):
     """Model for membership"""
@@ -108,9 +110,6 @@ class Slot(Base, TimestampableMixin):
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     key = sa.Column(sa_pg.UUID, nullable=False, default=gen_uuid())
-    slot_type = sa.Column(
-        sa_pg.ENUM(SlotTypeEnum), nullable=False, default=SlotTypeEnum.OPEN
-    )
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
     stripe_id = sa.Column(sa.String)
     stripe_status = sa.Column(
