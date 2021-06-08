@@ -15,21 +15,25 @@ from ..utils.models_utils import DoorAccessEnum
 router = APIRouter()
 
 
-api_key_header = APIKeyHeader(name="api_key")
+api_key_header = APIKeyHeader(name="api_key", auto_error=True)
 
 
 class DoorAccessQuery(BaseModel):
     key: str
 
 
-@router.post("", status_code=status.HTTP_204_NO_CONTENT)
-async def access_door(
-    q: DoorAccessQuery,
-    api_key: str = Security(api_key_header),
-    db: AsyncSession = Depends(deps.get_db),
-):
+def get_api_key(api_key: str = Security(api_key_header)):
     if api_key != settings.DOOR_API_KEY:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="go away")
+
+
+@router.post(
+    "", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Security(get_api_key)]
+)
+async def access_door(
+    q: DoorAccessQuery,
+    db: AsyncSession = Depends(deps.get_db),
+):
     if user := await crud.user.get(
         db,
         models.User.door_id == q.key,

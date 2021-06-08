@@ -47,6 +47,6 @@ async def slot_create_payment_intent(
             },
         )
         await db.commit()
-        return {"payment_intent_id": payment_intent.id}
+        return {"client_secret": payment_intent.client_secret}
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

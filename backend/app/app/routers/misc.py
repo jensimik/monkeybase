@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 
 import aiohttp
 from dateutil.relativedelta import MO, SU, relativedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from .. import deps
 
@@ -24,3 +24,13 @@ async def opening_hours(
     url = URL.format(date_from=date_from, date_to=date_to)
     async with session.get(url) as resp:
         return await resp.json()
+
+
+@router.get(
+    "/healthz",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+)
+async def healthz():
+    return {"dont blame": "the routesetters"}

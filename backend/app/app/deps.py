@@ -3,8 +3,9 @@ from typing import AsyncIterator, Optional
 
 import aiohttp
 import stripe
-from fastapi import Depends, Header, HTTPException, Query, Request, status
+from fastapi import Depends, Header, HTTPException, Query, Request, Security, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from fastapi.security.api_key import APIKeyHeader
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
         "admin": "admin scope only for the board/admin",
     },
 )
+stripe_signature_header = APIKeyHeader(name="stripe-signature", auto_error=True)
 
 
 @asynccontextmanager
@@ -40,7 +42,7 @@ async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
 
 
 async def stripe_webhook_event(
-    request: Request, stripe_signature: str = Header(...)
+    request: Request, stripe_signature: str = Security(stripe_signature_header)
 ) -> stripe.Event:
     data = await request.body()
     try:
