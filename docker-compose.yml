@@ -10,6 +10,11 @@ services:
             - POSTGRES_USER=db_user
             - POSTGRES_PASSWORD=db_password
             - POSTGRES_DB=db
+    
+    stripe_webhook:
+        image: stripe/stripe-cli
+        container_name: stripe_webhook
+        command: listen --api-key ${STRIPE_API_KEY} --device-name ${STRIPE_DEVICE_NAME} --forward-to 172.17.0.1:8080/stripe-webhook
 
     app:
         image: monkeybase

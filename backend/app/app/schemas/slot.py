@@ -29,7 +29,7 @@ class SlotUpdate(SlotBase):
 class SlotInDBBase(SlotBase):
     id: int
     reserved_until: datetime
-    user_id: int
+    user_id: Optional[int] = None
     product_id: int
     key: UUID
     active: bool

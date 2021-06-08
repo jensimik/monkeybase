@@ -104,7 +104,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         page: Optional[str] = None,
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
         only_active: Optional[bool] = True,
-    ) -> List[ModelType]:
+    ) -> Dict[str, Any]:  # List[ModelType]:
         query = self._get_multi_sql(
             *args,
             join=join,
@@ -137,7 +137,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_in: Union[UpdateSchemaType, Dict[str, Any]],
         multi: Optional[bool] = False,
         only_active: Optional[bool] = True,
-    ) -> ModelType:
+    ) -> Optional[ModelType]:
         upd_dict = (
             obj_in if isinstance(obj_in, dict) else obj_in.dict(exclude_unset=True)
         )

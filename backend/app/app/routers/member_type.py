@@ -116,10 +116,10 @@ async def reserve_a_slot(
     if await crud.member.get(
         db,
         models.Member.user_id == user.id,
-        models.Member.member_type_id == member_type_id,
+        models.Member.product_id == member_type_id,
         models.Member.active == True,
     ):
-        return HTTPException(
+        raise HTTPException(
             status_code=422, detail="you are already a member of this membertype"
         )
 
