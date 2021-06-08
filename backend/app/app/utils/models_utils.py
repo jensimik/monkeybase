@@ -44,6 +44,7 @@ class DoorAccessEnum(Enum):
 
 class StripeStatusEnum(Enum):
 
+    NOT_AVAILABLE = "NOT_AVAILABLE"
     PENDING = "PENDING"
-    CAPTURED = "CAPUTERED"
+    PAID = "PAID"
     FAIL = "FAIL"

@@ -5,8 +5,14 @@ from .config import settings
 stripe.api_key = settings.STRIPE_API_KEY
 
 
-def create_payment_intent(amount: int) -> dict:
-    return stripe.PaymentIntent.create(amount=amount, currency="dkk")
+def create_payment_intent(amount: int, metadata: dict = {}) -> dict:
+    return stripe.PaymentIntent.create(
+        amount=amount,
+        currency="dkk",
+        payment_method_types=["card"],
+        confirm=True,
+        metadata=metadata,
+    )
 
 
 def create_customer(email: str, name: str) -> str:

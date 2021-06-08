@@ -63,7 +63,7 @@ async def stripe_event(
             await crud.slot.update(
                 db,
                 models.Slot.id == slot.id,
-                obj_in={"stripe_status": StripeStatusEnum.CAPTURED},
+                obj_in={"stripe_status": StripeStatusEnum.PAID},
             )
             if isinstance(slot.product, models.MemberType):
                 member = {

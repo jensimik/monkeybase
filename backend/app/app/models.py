@@ -113,7 +113,9 @@ class Slot(Base, TimestampableMixin):
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
     stripe_id = sa.Column(sa.String)
     stripe_status = sa.Column(
-        sa_pg.ENUM(StripeStatusEnum), nullable=False, default=StripeStatusEnum.PENDING
+        sa_pg.ENUM(StripeStatusEnum),
+        nullable=False,
+        default=StripeStatusEnum.NOT_AVAILABLE,
     )
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=True)
     product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"))
