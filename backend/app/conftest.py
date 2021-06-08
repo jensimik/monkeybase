@@ -1,11 +1,15 @@
-import pytest
 import asyncio
+import datetime
+
+import pytest
 import sqlalchemy as sa
-from app.main import app
-from app import models, deps
-from app.core.security import get_password_hash
-from fastapi.testclient import TestClient
 from faker import Faker
+from fastapi.testclient import TestClient
+
+from app import crud, deps, models
+from app.core.security import get_password_hash
+from app.main import app
+from app.utils.models_utils import StripeStatusEnum
 
 fake = Faker()
 
@@ -39,9 +43,9 @@ async def user_basic():
 
         yield user
 
-        q = sa.delete(models.User).where(models.User.email == email)
-        await db.execute(q)
-        await db.commit()
+        # q = sa.delete(models.User).where(models.User.email == email)
+        # await db.execute(q)
+        # await db.commit()
 
 
 @pytest.mark.asyncio
@@ -65,9 +69,29 @@ async def user_admin():
 
         yield user
 
-        q = sa.delete(models.User).where(models.User.email == email)
-        await db.execute(q)
+        # q = sa.delete(models.User).where(models.User.email == email)
+        # await db.execute(q)
+        # await db.commit()
+
+
+@pytest.mark.asyncio
+@pytest.fixture(scope="session")
+async def slot_with_stripe_id(user_basic: models.User):
+
+    async with deps.get_db_context() as db:
+        slot = await crud.slot.create(
+            db,
+            obj_in={
+                "stripe_id": fake.md5(),
+                "user_id": user_basic.id,
+                "product_id": 1,
+                "stripe_status": StripeStatusEnum.PENDING,
+                "reserved_until": datetime.datetime.utcnow()
+                + datetime.timedelta(hours=1),
+            },
+        )
         await db.commit()
+        yield slot
 
 
 @pytest.fixture(scope="session")

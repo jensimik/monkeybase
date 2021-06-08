@@ -21,11 +21,11 @@ async def stripe_event(
     db: AsyncSession = Depends(deps.get_db),
 ):
     if event.type == "payment_intent.fail":
-        payment_intent = event.data
+        payment_intent = event.data.object
         if slot := await crud.slot.get(
             db,
             models.Slot.stripe_id == payment_intent.id,
-            models.Slot.valid_until > datetime.datetime.utcnow(),
+            models.Slot.reserved_until > datetime.datetime.utcnow(),
             models.Slot.stripe_status == StripeStatusEnum.PENDING,
             options=[
                 sa.orm.selectinload(
@@ -42,15 +42,16 @@ async def stripe_event(
             )
             await db.commit()
             # TODO: send some kind of message/email to user saying that payment failed?
+        else:
+            logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
 
     elif event.type == "payment_intent.succeeded":
-        payment_intent = event.data
-        logger.info(payment_intent)
+        payment_intent = event.data.object
         # get the slot for this payment
         if slot := await crud.slot.get(
             db,
             models.Slot.stripe_id == payment_intent.id,
-            models.Slot.valid_until > datetime.datetime.utcnow(),
+            models.Slot.reserved_until > datetime.datetime.utcnow(),
             models.Slot.stripe_status == StripeStatusEnum.PENDING,
             options=[
                 sa.orm.selectinload(
@@ -87,4 +88,6 @@ async def stripe_event(
             await db.commit()
             # trigger a welcome message/etc for the event/membertype
             background_tasks.add_task(slot.product.send_welcome, slot.user)
+        else:
+            logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
     return {"everything": "is awesome"}
