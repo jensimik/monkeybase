@@ -145,19 +145,6 @@ async def reserve_a_slot(
         )
         await db.commit()
 
-        # # ensure user is created in stripe as a customer
-        # if user.stripe_customer_id:
-        #     stripe.update_customer(email=user.email, name=user.name)
-        # else:
-        #     stripe_customer_id = stripe.create_customer(
-        #         email=user.email, name=user.name
-        #     )
-        #     user = await crud.user.update(
-        #         db,
-        #         models.User.id == user.id,
-        #         obj_in={"stripe_customer_id": stripe_customer_id},
-        # )
-
         # TODO: maybe signal to websocket that one slot is reserved
         # TODO: maybe create a background task to wait for 30 minutes
         # and trigger a recalculation of available slots on the websocket
@@ -167,62 +154,6 @@ async def reserve_a_slot(
     raise HTTPException(
         status_code=404, detail="no slots available currently - try again later"
     )
-
-
-# @router.post("/{member_type_id}/", response_model=schemas.Member)
-# async def use_a_slot(
-#     member_type_id: int,
-#     member: schemas.MemberCreateMe,
-#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ):
-#     slot = await crud.member_type_slot.get(
-#         db,
-#         models.MemberTypeSlot.key == member.key,
-#         models.MemberTypeSlot.user_id == user_id,
-#         models.MemberTypeSlot.member_type_id == member_type_id,
-#         models.MemberTypeSlot.reserved_until > datetime.datetime.utcnow(),
-#         for_update=True,
-#     )
-#     if not slot:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="sorry, your reservation does not exist or has expired",
-#         )
-#     # disable the slot if successfull
-#     await crud.member_type_slot.remove(db, models.MemberTypeSlot.id == slot.id)
-
-#     # TODO: validate member.payment_id?
-#     # TODO: and mark the payment reservation to be captured at next capture run
-
-#     date_start = datetime.date.utcnow()
-#     # ends last day of year/new years - have to renew membership before that date!
-#     date_end = datetime.date(
-#         year=date_start.year + 1, month=1, day=1
-#     ) - datetime.timedelta(days=1)
-#     member = await crud.member.create(
-#         db,
-#         schemas.MemberCreate(
-#             user_id=user_id,
-#             member_type_id=member_type_id,
-#             payment_id=member.payment_id,
-#             date_start=date_start,
-#             date_end=date_end,
-#         ),
-#     )
-
-#     await db.commit()
-
-#     return member
-
-
-# @router.post("/{member_type_id}/create_payment_intent")
-# async def create_payment_intent(
-#     member_type_id: int,
-#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ):
-#     pass
 
 
 @router.get(

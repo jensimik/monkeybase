@@ -8,6 +8,7 @@ from pydantic import BaseModel
 class MemberTypeBase(BaseModel):
     active: Optional[bool] = True
     name: Optional[str] = None
+    name_short: Optional[str] = None
     slot_enabled: Optional[bool] = None
     slot_limit: Optional[int] = None
 
@@ -15,6 +16,7 @@ class MemberTypeBase(BaseModel):
 # Properties to receive via API on creation
 class MemberTypeCreate(MemberTypeBase):
     name: str
+    name_short: str
 
 
 # Properties to receive via API on update

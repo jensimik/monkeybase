@@ -26,6 +26,7 @@ class User(TimestampableMixin, Base):
     active = sa.Column(sa.Boolean, nullable=False, default=True)
     enabled_2fa = sa.Column(sa.Boolean, nullable=False, default=False)
     door_id = sa.Column(sa.String, nullable=True, index=True)
+    stripe_customer_id = sa.Column(sa.String, nullable=True)
     member = sa.orm.relationship("Member", back_populates="user", lazy="noload")
     webauthn = sa.orm.relationship("Webauthn", back_populates="user", lazy="noload")
     slot = sa.orm.relationship("Slot", back_populates="user", lazy="noload")
@@ -68,6 +69,9 @@ class Product(TimestampableMixin, Base):
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     obj_type = sa.Column(sa.String, index=True)
     name = sa.Column(sa.String, nullable=False)
+    name_short = sa.Column(
+        sa.String, nullable=False
+    )  # short version of name, for credit card statement, and other places
     description = sa.Column(sa.Text)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     slot_limit = sa.Column(sa.Integer, default=0, nullable=False)

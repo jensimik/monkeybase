@@ -43,6 +43,7 @@ async def seed_data():
             q = sa.insert(MemberType).values(
                 {
                     "name": x,
+                    "name_short": x,
                     "obj_type": "member_type",
                     "door_access": DoorAccessEnum.FULL,
                 }
@@ -50,7 +51,9 @@ async def seed_data():
             await conn.execute(q)
 
         for x in ["Event 1", "Event 2"]:
-            q = sa.insert(MemberType).values({"name": x, "obj_type": "event"})
+            q = sa.insert(MemberType).values(
+                {"name": x, "name_short": x, "obj_type": "event"}
+            )
             await conn.execute(q)
 
         q = sa.select(MemberType).where(MemberType.name == "Full membership")

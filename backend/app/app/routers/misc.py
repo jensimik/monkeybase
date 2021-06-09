@@ -33,4 +33,4 @@ async def opening_hours(
     include_in_schema=False,
 )
 async def healthz():
-    return {"if too weak": "dont blame the routesetter"}
+    return {"if too weak": "dont blame the (fastapi)routesetter"}

@@ -29,7 +29,7 @@ def test_get_member_type(client: TestClient, member_type_id=1):
 
 
 def test_create_member_type(auth_client_admin: TestClient):
-    new_member_type = {"name": "new_member_type"}
+    new_member_type = {"name": "new_member_type", "name_short": "nmt"}
     response = auth_client_admin.post("/member_types", json=new_member_type)
     assert response.status_code == status.HTTP_201_CREATED
 
@@ -56,7 +56,7 @@ def test_patch_member_type(auth_client_admin: TestClient):
 
 
 def test_delete_member_type(auth_client_admin: TestClient):
-    new_member_type = {"name": "new_member_type"}
+    new_member_type = {"name": "new_member_type", "name_short": "nmt"}
     response = auth_client_admin.post("/member_types", json=new_member_type)
     assert response.status_code == status.HTTP_201_CREATED
 
