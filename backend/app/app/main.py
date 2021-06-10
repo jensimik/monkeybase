@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
+from . import cron
 from .core.config import settings
-from .cron import generate_slots
 
 # routes
 from .routers import (
@@ -54,4 +54,4 @@ app.include_router(misc.router, tags=["misc"])
 @app.on_event("startup")
 @repeat_at(cron="0 * * * *", wait_first=True, raise_exceptions=True)
 async def _generate_slots():
-    await generate_slots()
+    await cron.generate_slots()

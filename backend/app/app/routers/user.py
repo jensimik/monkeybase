@@ -28,11 +28,14 @@ async def _delete_user(db: AsyncSession, user_id: int):
     await db.commit()
 
 
-@router.get("", response_model=schemas.Page[schemas.User])
+@router.get(
+    "",
+    response_model=schemas.Page[schemas.User],
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def user_list(
     paging: deps.Paging = Depends(deps.Paging),
     q: deps.Q = Depends(deps.Q),
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -64,10 +67,13 @@ async def user_list(
     )
 
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get(
+    "/{user_id}",
+    response_model=schemas.User,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def read_user_by_id(
     user_id: int,
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -84,10 +90,14 @@ async def read_user_by_id(
     )
 
 
-@router.post("", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=schemas.User,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def create_user(
     create: schemas.UserCreate,
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     obj_in = create.dict(exclude_unset=True)
@@ -98,11 +108,14 @@ async def create_user(
     return user
 
 
-@router.patch("/{user_id}", response_model=schemas.User)
+@router.patch(
+    "/{user_id}",
+    response_model=schemas.User,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def update_user(
     update: schemas.UserUpdate,
     user_id: int,
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -117,10 +130,13 @@ async def update_user(
         raise ex
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def delete_user(
     user_id: int,
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
     """disable user"""
@@ -145,76 +161,3 @@ async def read_user_by_id_identicon(
         img.save(bi, "png")
         bi.seek(0)
         return Response(content=bi.getvalue(), media_type="image/png")
-
-
-# @router.get("/me", response_model=schemas.User)
-# async def read_user_me(
-#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ) -> Any:
-#     """
-#     Get current user.
-#     """
-#     return await crud.user.get(
-#         db,
-#         models.User.id == user_id,
-#         options=[
-#             sa.orm.subqueryload(
-#                 models.User.member.and_(models.Member.active == True)
-#             ).subqueryload(
-#                 models.Member.member_type.and_(models.MemberType.active == True)
-#             )
-#         ],
-#     )
-
-
-# @router.patch("/me", response_model=schemas.User)
-# async def update_user_me(
-#     update: schemas.UserUpdateMe,
-#     current_user_id: int = Security(deps.get_current_user_id, scopes=["basic"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ) -> Any:
-#     """
-#     Update own user.
-#     """
-#     user = await crud.user.update(db, models.User.id == current_user_id, obj_in=update)
-#     try:
-#         await db.commit()
-#         return user
-#     except sa.exc.IntegrityError as ex:
-#         await db.rollback()
-#         raise ex
-
-
-# @router.delete("/me")
-# async def disable_myself(
-#     db: AsyncSession = Depends(deps.get_db),
-#     user_id: models.User = Security(deps.get_current_user_id, scopes=["basic"]),
-# ):
-#     return await _delete_user(db, user_id)
-
-
-# @router.get("/{user_id}/member", response_model=schemas.Page[schemas.MemberMemberType])
-# async def member_list(
-#     user_id: int,
-#     paging: deps.Paging = Depends(deps.Paging),
-#     _: int = Security(deps.get_current_user_id, scopes=["admin"]),
-#     db: AsyncSession = Depends(deps.get_db),
-# ) -> Any:
-#     """
-#     Get list of all memberships for a specific user
-#     """
-#     return await crud.member.get_multi_page(
-#         db,
-#         (models.Member.user_id == user_id),
-#         join=[models.Member.member_type],
-#         options=[
-#             sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
-#             sa.orm.subqueryload(
-#                 models.Member.member_type.and_(models.MemberType.active == True)
-#             ),
-#         ],
-#         page=paging.page,
-#         per_page=paging.per_page,
-#         order_by=[models.MemberType.name.asc(), models.MemberType.id.asc()],
-#     )

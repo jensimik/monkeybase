@@ -11,10 +11,14 @@ from ..core import stripe
 router = APIRouter()
 
 
-@router.post("", response_model=schemas.MemberType, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=schemas.MemberType,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def create_member_type(
     member_type: schemas.MemberTypeCreate,
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
@@ -58,11 +62,14 @@ async def get_member_type(
     )
 
 
-@router.patch("/{member_type_id}", response_model=schemas.MemberType)
+@router.patch(
+    "/{member_type_id}",
+    response_model=schemas.MemberType,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def update_member_type(
     member_type_id: int,
     update: schemas.MemberTypeUpdate,
-    _: models.User = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
     """update a member_type"""
@@ -77,10 +84,13 @@ async def update_member_type(
     )
 
 
-@router.delete("/{member_type_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{member_type_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
+)
 async def delete_memeber_type(
     member_type_id: int,
-    _: models.User = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
     """disable a member_type"""
@@ -157,13 +167,14 @@ async def reserve_a_slot(
 
 
 @router.get(
-    "/{member_type_id}/members", response_model=schemas.Page[schemas.MemberUser]
+    "/{member_type_id}/members",
+    response_model=schemas.Page[schemas.MemberUser],
+    dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
 async def member_list(
     member_type_id: int,
     paging: deps.Paging = Depends(deps.Paging),
     q: deps.Q = Depends(deps.Q),
-    _: int = Security(deps.get_current_user_id, scopes=["admin"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
