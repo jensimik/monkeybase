@@ -6,6 +6,7 @@ from dateutil.relativedelta import MO, SU, relativedelta
 from fastapi import APIRouter, Depends, status
 
 from .. import deps
+from ..core.custom_swagger import get_swagger_ui_html
 
 router = APIRouter()
 
@@ -24,6 +25,16 @@ async def opening_hours(
     url = URL.format(date_from=date_from, date_to=date_to)
     async with session.get(url) as resp:
         return await resp.json()
+
+
+@router.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    """custom swagger to show which scopes are required for each endpoint"""
+    return get_swagger_ui_html(
+        openapi_url="/openapi.json",
+        title="Swagger UI",
+        oauth2_redirect_url="/docs/oauth2-redirect",
+    )
 
 
 @router.get(

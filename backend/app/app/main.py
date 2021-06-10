@@ -1,13 +1,10 @@
-import datetime
 import pathlib
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
-from . import crud, deps, models
 from .core.config import settings
-from .core.custom_swagger import get_swagger_ui_html
 from .cron import generate_slots
 
 # routes
@@ -40,22 +37,6 @@ if settings.BACKEND_CORS_ORIGINS:
 module_dir = pathlib.Path(__file__).parent.absolute()
 
 
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
-    """custom swagger to show which scopes are required for each endpoint"""
-    return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - Swagger UI",
-        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-    )
-
-
-@app.get("/", include_in_schema=False)
-async def root():
-    """go away"""
-    return {"message": "go away, nothing to see here"}
-
-
 app.mount("/static", StaticFiles(directory=module_dir / "static"), name="static")
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn_2fa"])
@@ -73,18 +54,4 @@ app.include_router(misc.router, tags=["misc"])
 @app.on_event("startup")
 @repeat_at(cron="0 * * * *", wait_first=True, raise_exceptions=True)
 async def _generate_slots():
-    async with deps.get_db_context() as db:
-        if await crud.lock_table.get(
-            db,
-            models.LockTable.name == "cron_generate_slots",
-            for_update=True,
-            only_active=False,
-        ):
-            await crud.lock_table.update(
-                db,
-                models.LockTable.name == "cron_generate_slots",
-                obj_in={"ran_at": datetime.datetime.utcnow()},
-                only_active=False,
-            )
-            await generate_slots(db)
-            await db.commit()
+    await generate_slots()
