@@ -11,6 +11,7 @@ from fastapi import (
     Path,
     Request,
     Response,
+    BackgroundTasks,
     security,
     status,
 )
@@ -29,7 +30,7 @@ from ..core.security import (
     verify_password_reset_token,
     verify_webauthn_staten_token,
 )
-from ..core.utils import send_reset_password_email
+from ..core.utils import send_transactional_email, MailTemplateEnum
 
 router = APIRouter()
 
@@ -107,8 +108,6 @@ async def login_access_token_with_2fa(
             detail="Warning: Invalid state parameter!",
         )
 
-    logger.info(state)
-
     user = await crud.user.get(
         db,
         (models.User.id == state["user_id"]),
@@ -153,24 +152,27 @@ async def login_access_token_with_2fa(
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
 async def recover_password(
+    background_tasks: BackgroundTasks,
     email: str = Path(..., title="the email address to recover email from"),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
     Password Recovery
     """
-    user = await crud.user.get_by_email(db, email=email)
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this username does not exist in the system.",
+    if user := await crud.user.get(db, models.User.email == email):
+        password_reset_token = generate_password_reset_token(email=email)
+        background_tasks.add_task(
+            send_transactional_email,
+            to_email=user.email,
+            template_id=MailTemplateEnum.PASSWORD_RESET,
+            data={"password_reset_token": password_reset_token},
         )
-    password_reset_token = generate_password_reset_token(email=email)
-    # send_reset_password_email(
-    #     email_to=user.email, email=email, token=password_reset_token
-    # )
-    return {"msg": f"Password recovery email sent token: {password_reset_token}"}
+        return {"msg": "password recovery email sent"}
+
+    raise HTTPException(
+        status_code=404,
+        detail="The user with this username does not exist in the system.",
+    )
 
 
 @router.post("/reset-password", response_model=schemas.Msg)
@@ -186,16 +188,14 @@ async def reset_password(
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
 
-    user = await crud.user.get_by_email(db, email=email)
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="The user with this username does not exist in the system.",
+    if user := await crud.user.get(db, models.User.email == email):
+        user = await crud.user.update(
+            db, db_obj=user, obj_in={"hashed_password": get_password_hash(new_password)}
         )
-    elif not user.active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    user = await crud.user.update(
-        db, db_obj=user, obj_in={"hashed_password": get_password_hash(new_password)}
+        await db.commit()
+        return {"msg": "password updated successfully"}
+
+    raise HTTPException(
+        status_code=404,
+        detail="The user with this username does not exist in the system.",
     )
-    return {"msg": "Password updated successfully"}

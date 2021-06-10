@@ -17,7 +17,7 @@ async def generate_slots():
                 obj_in={"ran_at": datetime.datetime.utcnow()},
                 only_active=False,
             )
-            products = await crud.products.get_multi(db, models.Product.slot_limit > 0)
+            products = await crud.product.get_multi(db, models.Product.slot_limit > 0)
             for product in products:
                 member_count = await crud.member.count(
                     db,

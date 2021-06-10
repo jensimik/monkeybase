@@ -1,85 +1,39 @@
+from enum import Enum
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-import emails
-from emails.template import JinjaTemplate
 from loguru import logger
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Attachment, From, Mail
 
+from .. import models
 from .config import settings
 
 
-def send_email(
-    email_to: str,
-    subject_template: str = "",
-    html_template: str = "",
-    environment: Dict[str, Any] = {},
-) -> None:
-    assert settings.EMAILS_ENABLED, "no provided configuration for email variables"
-    message = emails.Message(
-        subject=JinjaTemplate(subject_template),
-        html=JinjaTemplate(html_template),
-        mail_from=(settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL),
+class MailTemplateEnum(Enum):
+
+    PASSWORD_RESET = "d-d53c66a7bcb54b2ca17ccd7f6b1be47d"
+    WELCOME = "d-d53c66a7bcb54b2ca17ccd7f6b1be47d"
+    PAYMENT_FAILED = "pf1"
+    PAYMENT_SUCCEEDED = "ps1"
+
+
+def send_transactional_email(
+    to_email: str,
+    template_id: str,
+    data: Dict[Any, Any],
+    attachments: List[Attachment] = [],
+):
+    sg_client = SendGridAPIClient(settings.SENDGRID_API_KEY)
+
+    message = Mail(
+        from_email=From(settings.SENDGRID_FROM_EMAIL, settings.SENDGRID_FROM_NAME),
+        to_emails=to_email,
     )
-    smtp_options = {"host": settings.SMTP_HOST, "port": settings.SMTP_PORT}
-    if settings.SMTP_TLS:
-        smtp_options["tls"] = True
-    if settings.SMTP_USER:
-        smtp_options["user"] = settings.SMTP_USER
-    if settings.SMTP_PASSWORD:
-        smtp_options["password"] = settings.SMTP_PASSWORD
-    response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logger.info(f"send email result: {response}")
+    message.template_id = template_id
+    message.dynamic_template_data = data
 
+    for attachment in attachments:
+        message.add_attachment(attachment)
 
-def send_test_email(email_to: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Test email"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "test_email.html") as f:
-        template_str = f.read()
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
-        environment={"project_name": settings.PROJECT_NAME, "email": email_to},
-    )
-
-
-def send_reset_password_email(email_to: str, email: str, token: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - Password recovery for user {email}"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "reset_password.html") as f:
-        template_str = f.read()
-    server_host = settings.SERVER_HOST
-    link = f"{server_host}/reset-password?token={token}"
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
-        environment={
-            "project_name": settings.PROJECT_NAME,
-            "username": email,
-            "email": email_to,
-            "valid_hours": settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
-            "link": link,
-        },
-    )
-
-
-def send_new_account_email(email_to: str, username: str, password: str) -> None:
-    project_name = settings.PROJECT_NAME
-    subject = f"{project_name} - New account for user {username}"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "new_account.html") as f:
-        template_str = f.read()
-    link = settings.SERVER_HOST
-    send_email(
-        email_to=email_to,
-        subject_template=subject,
-        html_template=template_str,
-        environment={
-            "project_name": settings.PROJECT_NAME,
-            "username": username,
-            "password": password,
-            "email": email_to,
-            "link": link,
-        },
-    )
+    sg_client.send(message)

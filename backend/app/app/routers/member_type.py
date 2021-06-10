@@ -1,8 +1,8 @@
 import datetime
-from typing import Any, List
+from typing import Any, Union
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Security, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
@@ -105,13 +105,17 @@ async def delete_memeber_type(
     await db.commit()
 
 
-@router.post("/{member_type_id}/reserve_a_slot", response_model=schemas.Slot)
+@router.post(
+    "/{member_type_id}/reserve_a_slot",
+    response_model=Union[schemas.WaitingList, schemas.Slot],
+)
 async def reserve_a_slot(
+    response: Response,
     member_type_id: int,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
-):
-    # first try to get a reservation in my name - usually from a waiting list
+) -> Union[models.Slot, models.WaitingList]:
+    # first try to get a reservation in my name - usually created from a waiting list
     # or if a slot have been made to renew a membership
     # but can also be from a previous open reservation slot if accidential hit page-refresh
     if slot := await crud.slot.get(
@@ -122,18 +126,43 @@ async def reserve_a_slot(
     ):
         return slot
 
+    # if already on waitinglist then return that fast
+    if waiting := await crud.waiting_list.get(
+        db,
+        models.WaitingList.product_id == member_type_id,
+        models.WaitingList.user_id == user.id,
+    ):
+        response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        return waiting
+
     # check if user is already a member of this membertype already
-    if await crud.member.get(
+    if member := await crud.member.get(
         db,
         models.Member.user_id == user.id,
         models.Member.product_id == member_type_id,
         models.Member.active == True,
     ):
+        # if already a member - then you are allowed to resubscribe from 1 december until exire - create a new slot for you here
+        today = datetime.date.today()
+        if any([today.month == 12, today.month == 1 and today <= member.date_end]):
+            if slot := await crud.slot.create(
+                db,
+                obj_in={
+                    "user_id": user.id,
+                    "product_id": member_type_id,
+                    "reserved_until": datetime.datetime.utcnow()
+                    + datetime.timedelta(days=14),
+                },
+            ):
+                await db.commit()
+                return slot
+        # if outside resubscribe window then raise error
         raise HTTPException(
-            status_code=422, detail="you are already a member of this membertype"
+            status_code=422,
+            detail="you are already a member of this membertype and outside resubscribe window",
         )
 
-    # then try to get an open available slot
+    # if not a member already - then try to get an open available slot
     if slot := await crud.slot.get(
         db,
         models.Slot.product_id == member_type_id,
@@ -154,15 +183,19 @@ async def reserve_a_slot(
             ),
         )
         await db.commit()
-
-        # TODO: maybe signal to websocket that one slot is reserved
-        # TODO: maybe create a background task to wait for 30 minutes
-        # and trigger a recalculation of available slots on the websocket
         return slot
 
-    # no slots available - sorry
+    # if no available slot then put on waitinglist
+    if waiting := await crud.waiting_list.create(
+        db, obj_in={"product_id": member_type_id, "user_id": user.id}
+    ):
+        await db.commit()
+        response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        return waiting
+
+    # last resort
     raise HTTPException(
-        status_code=404, detail="no slots available currently - try again later"
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="unknown error"
     )
 
 

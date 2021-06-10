@@ -1,17 +1,102 @@
 import datetime
 
-import sqlalchemy as sa
+import stripe
 from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..utils.models_utils import StripeStatusEnum
-
-import stripe
 
 from .. import crud, deps, models
+from ..core.utils import MailTemplateEnum, send_transactional_email
+from ..utils.models_utils import StripeStatusEnum
 
 router = APIRouter()
+
+
+class SlotNotFound(Exception):
+    pass
+
+
+async def payment_fail(db, payment_intent):
+    if slot := await crud.slot.get(
+        db,
+        models.Slot.stripe_id == payment_intent.id,
+        models.Slot.reserved_until > datetime.datetime.utcnow(),
+        models.Slot.stripe_status == StripeStatusEnum.PENDING,
+        for_update=True,
+    ):
+        user = await crud.user.get(db, models.User.id == slot.user_id)
+        product = await crud.product.get(db, models.Product.id == slot.product_id)
+        slot = await crud.slot.update(
+            db,
+            models.Slot.id == slot.id,
+            obj_in={"stripe_status": StripeStatusEnum.FAIL},
+        )
+        return user, slot, product
+    logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
+    raise SlotNotFound("slot not found?")
+
+
+async def payment_succeeded(db, payment_intent):
+    # get the slot for this payment
+    if slot := await crud.slot.get(
+        db,
+        models.Slot.stripe_id == payment_intent.id,
+        models.Slot.reserved_until > datetime.datetime.utcnow(),
+        models.Slot.stripe_status == StripeStatusEnum.PENDING,
+        for_update=True,
+    ):
+        user = await crud.user.get(db, models.User.id == slot.user_id)
+        product = await crud.product.get(db, models.Product.id == slot.product_id)
+        await crud.slot.update(
+            db,
+            models.Slot.id == slot.id,
+            obj_in={
+                "stripe_status": StripeStatusEnum.PAID,
+                "reserved_until": datetime.datetime.utcnow(),
+            },
+        )
+        if isinstance(product, models.MemberType):
+            # check if already a member of this membertype - then extend until next year
+            if member_exist := await crud.member.get(
+                db,
+                models.Member.user_id == user.id,
+                models.Member.product_id == product.id,
+            ):
+                # ok now we just extend the membership for another year
+                member = await crud.member.update(
+                    db,
+                    models.Member.id == member_exist.id,
+                    obj_in={
+                        "date_end": member_exist.date_end
+                        + relativedelta(years=1, nlyearday=15),
+                        "stripe_id": slot.stripe_id,
+                    },
+                )
+            else:
+                # create a new member object
+                member = {
+                    "user_id": slot.user_id,
+                    "product_id": slot.product_id,
+                    "stripe_id": slot.stripe_id,
+                    "date_start": datetime.date.today(),
+                    "date_end": datetime.date.today()
+                    + relativedelta(years=1, nlyearday=15),
+                }
+            await crud.member.create(db, obj_in=member)
+        elif isinstance(product, models.Event):
+            member = {
+                "user_id": slot.user_id,
+                "product_id": slot.product_id,
+                "date_start": slot.product.date_start,
+                "date_end": slot.product.date_end,
+                "stripe_id": slot.stripe_id,
+            }
+            await crud.member.create(db, obj_in=member)
+
+        return user, slot, product
+
+    raise SlotNotFound("slot not found?")
 
 
 @router.post("/stripe-webhook", response_model=dict, status_code=status.HTTP_200_OK)
@@ -21,73 +106,32 @@ async def stripe_event(
     db: AsyncSession = Depends(deps.get_db),
 ):
     if event.type == "payment_intent.fail":
-        payment_intent = event.data.object
-        if slot := await crud.slot.get(
-            db,
-            models.Slot.stripe_id == payment_intent.id,
-            models.Slot.reserved_until > datetime.datetime.utcnow(),
-            models.Slot.stripe_status == StripeStatusEnum.PENDING,
-            options=[
-                sa.orm.selectinload(
-                    models.Slot.product.and_(models.Product.active == True)
-                ),
-                sa.orm.selectinload(models.Slot.user.and_(models.User.active == True)),
-            ],
-            for_update=True,
-        ):
-            await crud.slot.update(
-                db,
-                models.Slot.id == slot.id,
-                obj_in={"stripe_status": StripeStatusEnum.FAIL},
-            )
-            await db.commit()
-            # TODO: send some kind of message/email to user saying that payment failed?
+        try:
+            user, _, product = await payment_fail(db, event.data.object)
+        except SlotNotFound:
+            pass
         else:
-            logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
+            await db.commit()
+            background_tasks.add_task(
+                send_transactional_email,
+                to_email=user.email,
+                template_id=MailTemplateEnum.PAYMENT_FAILED,
+                data={"product_name": product.name},
+            )
 
     elif event.type == "payment_intent.succeeded":
-        payment_intent = event.data.object
-        # get the slot for this payment
-        if slot := await crud.slot.get(
-            db,
-            models.Slot.stripe_id == payment_intent.id,
-            models.Slot.reserved_until > datetime.datetime.utcnow(),
-            models.Slot.stripe_status == StripeStatusEnum.PENDING,
-            options=[
-                sa.orm.selectinload(
-                    models.Slot.product.and_(models.Product.active == True)
-                ),
-                sa.orm.selectinload(models.Slot.user.and_(models.User.active == True)),
-            ],
-            for_update=True,
-        ):
-            await crud.slot.update(
-                db,
-                models.Slot.id == slot.id,
-                obj_in={"stripe_status": StripeStatusEnum.PAID},
-            )
-            if isinstance(slot.product, models.MemberType):
-                member = {
-                    "user_id": slot.user_id,
-                    "product_id": slot.product_id,
-                    "date_start": datetime.date.today(),
-                    "date_end": datetime.date.today()
-                    + relativedelta(years=1, yearday=1),
-                    "stripe_id": slot.stripe_id,
-                }
-            elif isinstance(slot.product, models.Event):
-                member = {
-                    "user_id": slot.user_id,
-                    "product_id": slot.product_id,
-                    "date_start": slot.product.date_start,
-                    "date_end": slot.product.date_end,
-                    "stripe_id": slot.stripe_id,
-                }
-            # then create the member in db
-            await crud.member.create(db, obj_in=member)
-            await db.commit()
-            # trigger a welcome message/etc for the event/membertype
-            background_tasks.add_task(slot.product.send_welcome, slot.user)
+        try:
+            user, _, product = await payment_succeeded(db, event.data.object)
+        except SlotNotFound:
+            # TODO: log this?
+            pass
         else:
-            logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
+            await db.commit()
+            background_tasks.add_task(
+                send_transactional_email,
+                to_email=user.email,
+                template_id=MailTemplateEnum.PAYMENT_SUCCEEDED,
+                data={"product_name": product.name, "amount": product.amount},
+            )
+
     return {"everything": "is awesome"}

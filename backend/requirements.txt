@@ -16,6 +16,7 @@ sqlakeyset>=1.0.1616300210
 
 # integrations/api's
 stripe>=2.58.0
+sendgrid>=6.7.0
 aiohttp[speedups]>=3.7.4.post0
 
 # misc
@@ -24,6 +25,6 @@ tenacity>=7.0.0
 looms>=1.2
 python-dateutil>=2.8.1
 loguru>=0.5.3
-emails>=0.6
+# emails>=0.6
 aiofiles>=0.7.0
 broadcaster[postgres]>=0.2.0
