@@ -59,6 +59,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         options: Optional[List] = [],
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
         only_active: Optional[bool] = True,
+        limit: Optional[int] = None,
     ):
         query = sa.future.select(self.model)
         if join:
@@ -74,6 +75,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         else:
             # multi should always be ordered for keyset pagination to work
             query = query.order_by(self.model.id.asc())
+        if limit:
+            query = query.limit(limit)
         return query
 
     async def get_multi(
@@ -84,6 +87,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         options: Optional[List[Any]] = [],
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
         only_active: Optional[bool] = True,
+        limit: Optional[int] = None,
     ) -> List[ModelType]:
         query = self._get_multi_sql(
             *args,
@@ -91,6 +95,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             options=options,
             order_by=order_by,
             only_active=only_active,
+            limit=limit,
         )
         return (await db.execute(query)).scalars().all()
 

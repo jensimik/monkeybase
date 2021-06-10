@@ -1,9 +1,15 @@
 from fastapi.testclient import TestClient
-from .. import models
-from ..core.utils import generate_password_reset_token, verify_password_reset_token
-from ..core.security import get_password_hash, verify_password, ALGORITHM
-from ..core.config import settings
 from jose import jwt
+
+from .. import models
+from ..core.config import settings
+from ..core.security import (
+    ALGORITHM,
+    generate_password_reset_token,
+    get_password_hash,
+    verify_password,
+    verify_password_reset_token,
+)
 
 
 def test_password_reset_token():

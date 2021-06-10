@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.config import settings
-from ..core.utils import generate_webauthn_state_token, verify_webauthn_staten_token
+from ..core.security import generate_webauthn_state_token, verify_webauthn_staten_token
 
 rp = fido2.webauthn.PublicKeyCredentialRpEntity(
     settings.WEBAUTHN_RP_ID, settings.WEBAUTHN_RP_NAME

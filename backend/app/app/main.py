@@ -1,16 +1,14 @@
-import asyncio
 import datetime
 import pathlib
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 
 from . import crud, deps, models
 from .core.config import settings
 from .core.custom_swagger import get_swagger_ui_html
-from .utils.cron import repeat_at
+from .cron import generate_slots
 
 # routes
 from .routers import (
@@ -19,12 +17,13 @@ from .routers import (
     me,
     member,
     member_type,
+    misc,
     slot,
     user,
     webauthn,
     webhook,
-    misc,
 )
+from .utils.cron import repeat_at
 
 app = FastAPI(title=settings.PROJECT_NAME, version="0.0.1", docs_url=None)
 
@@ -70,23 +69,22 @@ app.include_router(webhook.router, tags=["webhook"])
 app.include_router(misc.router, tags=["misc"])
 
 
+# release/generate slots every hour if any available
 @app.on_event("startup")
-@repeat_at(cron="*/10 * * * *", wait_first=True, raise_exceptions=True)
-async def _poor_mans_cron():
-    logger.info("here")
+@repeat_at(cron="0 * * * *", wait_first=True, raise_exceptions=True)
+async def _generate_slots():
     async with deps.get_db_context() as db:
         if await crud.lock_table.get(
-            db, models.LockTable.name == "crontest", for_update=True, only_active=False
+            db,
+            models.LockTable.name == "cron_generate_slots",
+            for_update=True,
+            only_active=False,
         ):
             await crud.lock_table.update(
                 db,
-                models.LockTable.name == "crontest",
+                models.LockTable.name == "cron_generate_slots",
                 obj_in={"ran_at": datetime.datetime.utcnow()},
                 only_active=False,
             )
-            logger.info("cron ping")
-            await asyncio.sleep(
-                10
-            )  # sleep a bit so the other processes fail to get lock
-
+            await generate_slots(db)
             await db.commit()

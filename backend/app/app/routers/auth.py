@@ -24,13 +24,12 @@ from ..core.security import (
     get_password_hash,
     verify_password,
     webauthn_state,
-)
-from ..core.utils import (  # send_reset_password_email,
     generate_password_reset_token,
     generate_webauthn_state_token,
     verify_password_reset_token,
     verify_webauthn_staten_token,
 )
+from ..core.utils import send_reset_password_email
 
 router = APIRouter()
 

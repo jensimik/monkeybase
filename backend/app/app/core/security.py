@@ -40,3 +40,48 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+
+def generate_password_reset_token(email: str) -> str:
+    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+    now = datetime.utcnow()
+    expires = now + delta
+    exp = expires.timestamp()
+    encoded_jwt = jwt.encode(
+        {"exp": exp, "nbf": now, "sub": email},
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
+    return encoded_jwt
+
+
+def verify_password_reset_token(token: str) -> Optional[str]:
+    try:
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return decoded_token["sub"]
+    except jwt.JWTError:
+        return None
+
+
+def generate_webauthn_state_token(state: dict, user: models.User) -> str:
+    _state = state.copy()
+    _state["user_id"] = user.id
+    delta = timedelta(minutes=5)
+    now = datetime.utcnow()
+    expires = now + delta
+    exp = expires.timestamp()
+    _state.update({"exp": exp})
+    encoded_jwt = jwt.encode(
+        _state,
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
+    return encoded_jwt
+
+
+def verify_webauthn_staten_token(token: str) -> Optional[str]:
+    try:
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        return decoded_token
+    except jwt.JWTError as ex:
+        return None

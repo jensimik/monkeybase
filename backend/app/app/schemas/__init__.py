@@ -9,7 +9,9 @@ from .member import (
     MemberUser,
 )
 from .member_type import MemberType, MemberTypeCreate, MemberTypeInDB, MemberTypeUpdate
+from .product import Product, ProductCreate, ProductUpdate
 from .slot import Slot, SlotCreate, SlotInDB, SlotUpdate
+from .waiting_list import WaitingList, WaitingListCreate, WaitingListUpdate
 from .msg import Msg
 from .page import Page
 from .token import Token, TokenPayload

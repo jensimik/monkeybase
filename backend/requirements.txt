@@ -1,31 +1,29 @@
-pydantic[email,dotenv]
+pydantic[email,dotenv]>=1.8.2
 
 # security stuff
 python-jose>=3.3.0
-cryptography
-passlib[bcrypt]
-python-multipart
-fido2
+cryptography>=3.4.7
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.5
+fido2>=0.9.1
 
 # db stuff
-asyncpg
-psycopg2-binary
 # use this sqlalchemy commit until it is rolled out in next release
-git+git://github.com/sqlalchemy/sqlalchemy.git@9416910#egg=sqlalchemy
-# sqlalchemy>=1.4.18
-alembic
-sqlakeyset
+git+git://github.com/sqlalchemy/sqlalchemy.git@ee03c9e#egg=sqlalchemy
+# sqlalchemy[postgresql_asyncpg,postgresql_psycopg2binary]>=1.4.18
+alembic>=1.6.5
+sqlakeyset>=1.0.1616300210
 
 # integrations/api's
-stripe
-aiohttp[speedups]
+stripe>=2.58.0
+aiohttp[speedups]>=3.7.4.post0
 
 # misc
-croniter
-tenacity
-looms
-python-dateutil
-loguru
-emails
-aiofiles
-broadcaster[postgres]
+croniter>=1.0.13
+tenacity>=7.0.0
+looms>=1.2
+python-dateutil>=2.8.1
+loguru>=0.5.3
+emails>=0.6
+aiofiles>=0.7.0
+broadcaster[postgres]>=0.2.0
