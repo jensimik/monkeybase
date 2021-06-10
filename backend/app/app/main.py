@@ -45,7 +45,7 @@ app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
 app.include_router(slot.router, prefix="/slot", tags=["slot"])
 app.include_router(member.router, prefix="/members", tags=["member"])
-app.include_router(door.router, prefix="/door-access", tags=["door"])
+app.include_router(door.router, tags=["door"])
 app.include_router(webhook.router, tags=["webhook"])
 app.include_router(misc.router, tags=["misc"])
 

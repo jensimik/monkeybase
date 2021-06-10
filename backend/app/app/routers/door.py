@@ -1,5 +1,5 @@
 import datetime
-from typing import Any
+from typing import Any, List
 
 import sqlalchemy as sa
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Security, status
@@ -28,7 +28,9 @@ def get_api_key(api_key: str = Security(api_key_header)):
 
 
 @router.post(
-    "", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Security(get_api_key)]
+    "/door-access",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Security(get_api_key)],
 )
 async def access_door(
     q: DoorAccessQuery,
@@ -58,3 +60,15 @@ async def access_door(
                 await db.commit()
                 return
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+
+@router.get("/door-data", response_model=List[datetime.datetime])
+async def public_door_data(db: AsyncSession = Depends(deps.get_db)):
+    entries = await crud.door_event.get_multi(
+        db,
+        models.Doorevent.created_at
+        > datetime.datetime.utcnow() - datetime.timedelta(days=180),
+        order_by=[models.Doorevent.created_at.desc()],
+        only_active=False,
+    )
+    return [x.created_at for x in entries]
