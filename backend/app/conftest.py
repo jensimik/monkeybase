@@ -11,6 +11,9 @@ from app.core.config import settings
 from app.core.security import get_password_hash
 from app.main import app
 from app.utils.models_utils import StripeStatusEnum
+from pytest_pgsql.time import SQLAlchemyFreezegun
+from app.db.base import engine
+
 
 engine = sa.create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, future=True)
 session = sessionmaker(engine, expire_on_commit=False, future=True)

@@ -7,3 +7,7 @@ faker
 
 fastapi
 uvicorn[standard]
+
+# freeze time for tests
+freezegun
+pytest_pgsql

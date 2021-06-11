@@ -8,9 +8,9 @@ python-multipart>=0.0.5
 fido2>=0.9.1
 
 # db stuff
-# use this sqlalchemy commit until it is rolled out in next release
-git+git://github.com/sqlalchemy/sqlalchemy.git@ee03c9e#egg=sqlalchemy
-# sqlalchemy[postgresql_asyncpg,postgresql_psycopg2binary]>=1.4.18
+# use this sqlalchemy commit until it is rolled out in 1.4.18
+# git+git://github.com/sqlalchemy/sqlalchemy.git@ee03c9e#egg=sqlalchemy
+sqlalchemy[postgresql_asyncpg,postgresql_psycopg2binary]>=1.4.18
 alembic>=1.6.5
 sqlakeyset>=1.0.1616300210
 

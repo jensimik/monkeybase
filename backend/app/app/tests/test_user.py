@@ -7,6 +7,9 @@ from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
+from ..db.base import engine
+from pytest_pgsql.time import SQLAlchemyFreezegun
+
 
 def test_get_users(auth_client_admin: TestClient):
     response = auth_client_admin.get("/users")

@@ -1,6 +1,9 @@
+import datetime
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
 
+from .core.config import settings
 from .db import Base
 from .utils.models_utils import (
     DoorAccessEnum,

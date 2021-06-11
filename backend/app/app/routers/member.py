@@ -78,7 +78,7 @@ async def member_list(
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    Get list of all member for this membership_type
+    Get list of all member for this member_type
     """
     args = (
         [

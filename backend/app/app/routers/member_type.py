@@ -213,30 +213,25 @@ async def member_list(
     """
     Get list of all member for this membership_type
     """
-    args = (
-        [
+    args = [models.Member.product_id == member_type_id]
+    if q.q:
+        args.append(
             sa.or_(
                 sa.func.lower(models.User.name).contains(q.q.lower(), autoescape=True),
                 sa.func.lower(models.User.email).contains(q.q.lower(), autoescape=True),
             )
-        ]
-        if q.q
-        else []
-    )
-    if member_type_id is not None:
-        args.append(models.Member.member_type_id == member_type_id)
-
+        )
     return await crud.member.get_multi_page(
         db,
         join=[models.Member.user],
         *args,
         options=[
-            sa.orm.subqueryload(models.Member.user.and_(models.User.active == True)),
-            sa.orm.subqueryload(
-                models.Member.member_type.and_(models.MemberType.active == True)
+            sa.orm.selectinload(models.Member.user.and_(models.User.active == True)),
+            sa.orm.selectinload(
+                models.Member.product.and_(models.Product.active == True)
             ),
         ],
         per_page=paging.per_page,
         page=paging.page,
-        order_by=[models.User.name.asc()],
+        order_by=[models.User.name.asc(), models.Member.id.asc()],
     )
