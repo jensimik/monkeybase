@@ -14,6 +14,7 @@ env:
   POSTGRES_DB: db
   SERVER_HOST: http://localhost
   SECRET_KEY: secret-key-for-testing
+  STRIPE_WEBHOOK_SECRET: whsec_FAKEpvdXjyFAKEEjVqpFAKEwuZFAKES8
 
 jobs:
   test:

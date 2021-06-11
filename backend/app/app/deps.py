@@ -41,7 +41,7 @@ async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
         yield session
 
 
-async def stripe_webhook_event(
+async def get_stripe_webhook_event(
     request: Request, stripe_signature: str = Security(stripe_signature_header)
 ) -> stripe.Event:
     data = await request.body()

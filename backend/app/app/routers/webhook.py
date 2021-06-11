@@ -102,7 +102,7 @@ async def payment_succeeded(db, payment_intent):
 @router.post("/stripe-webhook", response_model=dict, status_code=status.HTTP_200_OK)
 async def stripe_event(
     background_tasks: BackgroundTasks,
-    event: stripe.Event = Depends(deps.stripe_webhook_event),
+    event: stripe.Event = Depends(deps.get_stripe_webhook_event),
     db: AsyncSession = Depends(deps.get_db),
 ):
     if event.type == "payment_intent.fail":
