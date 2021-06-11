@@ -13,5 +13,5 @@ def test_door_access(client: TestClient):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # unknown code
-    response = client.post("/door-access", headers=headers, json={"key": "alex puccio"})
+    response = client.post("/door-access", headers=headers, json={"key": "puccio"})
     assert response.status_code == status.HTTP_403_FORBIDDEN

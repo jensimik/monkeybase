@@ -7,7 +7,7 @@ from sqlalchemy.dialects import postgresql as sa_pg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.util import with_polymorphic
 
-from .. import models
+from .. import models, schemas
 from ..db import Base
 from .utils import select_page
 
@@ -109,7 +109,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         page: Optional[str] = None,
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
         only_active: Optional[bool] = True,
-    ) -> Dict[str, Any]:  # List[ModelType]:
+    ) -> Dict[str, Any]:
         query = self._get_multi_sql(
             *args,
             join=join,
@@ -121,6 +121,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return {
             "items": items,
             "next": items.paging.bookmark_next if items.paging.has_next else "",
+            "prev": items.paging.bookmark_previous if items.paging.has_previous else "",
             "has_next": items.paging.has_next,
         }
 

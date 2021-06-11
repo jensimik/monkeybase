@@ -72,7 +72,6 @@ async def deactivate_membership(
     dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
 async def member_list(
-    product_id: Optional[int] = None,
     paging: deps.Paging = Depends(deps.Paging),
     q: deps.Q = Depends(deps.Q),
     db: AsyncSession = Depends(deps.get_db),
@@ -90,12 +89,10 @@ async def member_list(
         if q.q
         else []
     )
-    if product_id is not None:
-        args.append(models.Member.product_id == product_id)
 
     return await crud.member.get_multi_page(
         db,
-        join=[models.Member.user],
+        # join=[models.Member.user],
         *args,
         options=[
             sa.orm.selectinload(models.Member.user.and_(models.User.active == True)),
@@ -105,5 +102,5 @@ async def member_list(
         ],
         per_page=paging.per_page,
         page=paging.page,
-        order_by=[models.User.name.asc()],
+        # order_by=[models.User.name.asc()],
     )

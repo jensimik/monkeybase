@@ -2,6 +2,7 @@ import json
 import time
 
 import pytest
+from unittest import mock
 from fastapi import status
 from fastapi.testclient import TestClient
 from stripe.webhook import WebhookSignature
@@ -90,8 +91,12 @@ def _webhook_post(client: TestClient, payload: dict):
     return client.post("/stripe-webhook", headers=headers, data=data)
 
 
-def test_webhook_payment_intent_failed(
-    client: TestClient, auth_client_basic: TestClient, slot_with_stripe_id: models.Slot
+@mock.patch("app.core.utils._sendgrid_send")
+def test_webhook_payment_intent_succeeded(
+    mock_mail_send,
+    client: TestClient,
+    auth_client_basic: TestClient,
+    slot_with_stripe_id: models.Slot,
 ):
     # this doesnt do anything currently but should return 200
     response = _webhook_post(client, PAYMENT_INTENT_CREATED)
@@ -103,6 +108,7 @@ def test_webhook_payment_intent_failed(
     PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED)
     assert response.status_code == status.HTTP_200_OK
+    assert mock_mail_send.called
 
     # check this user is now member of product 1
     response = auth_client_basic.get("/me")

@@ -93,7 +93,7 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
     yield slot
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def client():
     yield TestClient(app)
 

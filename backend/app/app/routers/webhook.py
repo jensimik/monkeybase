@@ -131,7 +131,7 @@ async def stripe_event(
                 send_transactional_email,
                 to_email=user.email,
                 template_id=MailTemplateEnum.PAYMENT_SUCCEEDED,
-                data={"product_name": product.name, "amount": product.amount},
+                data={"product_name": product.name, "price": product.price},
             )
 
     return {"everything": "is awesome"}

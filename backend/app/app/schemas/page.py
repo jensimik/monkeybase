@@ -8,4 +8,5 @@ T = TypeVar("T")
 class Page(GenericModel, Generic[T]):
     items: Sequence[T]
     next: str
+    prev: str
     has_next: bool

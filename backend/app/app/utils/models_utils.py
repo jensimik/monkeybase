@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, unique
 
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as sa_pg
@@ -35,16 +35,18 @@ class TimestampableMixin:
     )
 
 
-class DoorAccessEnum(Enum):
+@unique
+class DoorAccessEnum(str, Enum):
 
-    FULL = "FULL"
-    MORNING = "MORNING"
-    NOACCESS = "NOACCESS"
+    FULL: str = "FULL"
+    MORNING: str = "MORNING"
+    NOACCESS: str = "NOACCESS"
 
 
-class StripeStatusEnum(Enum):
+@unique
+class StripeStatusEnum(str, Enum):
 
-    NOT_AVAILABLE = "NOT_AVAILABLE"
-    PENDING = "PENDING"
-    PAID = "PAID"
-    FAIL = "FAIL"
+    NOT_AVAILABLE: str = "NOT_AVAILABLE"
+    PENDING: str = "PENDING"
+    PAID: str = "PAID"
+    FAIL: str = "FAIL"

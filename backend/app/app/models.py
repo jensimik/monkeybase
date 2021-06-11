@@ -63,7 +63,7 @@ class Member(TimestampableMixin, Base):
     active = sa.orm.column_property(date_end >= sa.func.now())
     user = sa.orm.relationship("User", back_populates="member", lazy="noload")
     product = sa.orm.relationship("Product", back_populates="member", lazy="noload")
-    stripe_id = sa.Column(sa.String)
+    stripe_id = sa.Column(sa.String, nullable=True)
 
 
 class Product(TimestampableMixin, Base):
