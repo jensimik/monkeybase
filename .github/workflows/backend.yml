@@ -59,7 +59,7 @@ jobs:
       working-directory: backend/app
     - name: Test with pytest
       run: |
-        pytest
+        pytest --cov-fail-under=60 --cov=backend
       working-directory: backend
     - name: codecov
       run: |

@@ -1,3 +1,4 @@
+from fastapi import status
 from fastapi.testclient import TestClient
 from jose import jwt
 
@@ -73,3 +74,9 @@ def test_auth_basic_fail(client: TestClient):
         "/auth/token", data={"username": "non-existant@email.dk", "password": "basic"}
     )
     assert response.status_code == 400
+
+
+def test_auth_invalid_jwt(client: TestClient):
+    headers = {"authorization": "bearer invalidjwttoken"}
+    response = client.get("/me", headers=headers)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
