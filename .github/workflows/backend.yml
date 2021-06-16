@@ -61,3 +61,6 @@ jobs:
       run: |
         pytest
       working-directory: backend
+    - name: codecov
+      run: |
+        codecov

@@ -1,6 +1,10 @@
 pytest
 pytest-asyncio
 pytest-lazy-fixture
+pytest-cov
+pytest
+
+codecov
 
 # generate fake fixtures data
 faker
