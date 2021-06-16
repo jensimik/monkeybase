@@ -42,9 +42,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+        pip install flake8 pytest
       working-directory: backend
     - name: Lint with flake8
       run: |
@@ -53,14 +52,20 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       working-directory: backend
-    - name: seed data
-      run: |
-        python -m app.seed
-      working-directory: backend/app
+    # - name: seed data
+    #   run: |
+    #   working-directory: backend/app
     - name: Test with pytest
       run: |
-        pytest --cov-fail-under=60 --cov=backend
-      working-directory: backend
+        if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+        python -m app.seed
+        pytest --cov-fail-under=60 --cov-report=xml
+      # working-directory: backend
     - name: codecov
-      run: |
-        codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        verbose: true
+      # run: |
+      #   codecov
