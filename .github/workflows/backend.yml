@@ -58,11 +58,9 @@ jobs:
       working-directory: backend/app
     - name: Test with pytest
       run: |
-        pytest --cov-fail-under=60 --cov-report=xml
+        pytest --cov-fail-under=60 --cov-report= --cov=backend
     - name: codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
-        directory: ./coverage/reports/
-        path_to_write_report: ./coverage/codecov_report.txt
