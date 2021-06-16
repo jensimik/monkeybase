@@ -6,6 +6,8 @@ pytest
 
 codecov
 
+flake8
+
 # generate fake fixtures data
 faker
 
