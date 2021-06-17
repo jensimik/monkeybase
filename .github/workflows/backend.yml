@@ -58,9 +58,10 @@ jobs:
       working-directory: backend/app
     - name: Test with pytest
       run: |
-        pytest --cov-fail-under=60 --cov-report= --cov=backend
+        pytest --cov-fail-under=60 --cov-report=xml:backend-coverage.xml --cov=backend
     - name: codecov
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./backend-coverage.xml
         fail_ci_if_error: true
