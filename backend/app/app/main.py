@@ -14,6 +14,7 @@ from .routers import (
     me,
     member,
     member_type,
+    event,
     misc,
     slot,
     user,
@@ -43,6 +44,7 @@ app.include_router(webauthn.router, prefix="/webauthn", tags=["webauthn_2fa"])
 app.include_router(user.router, prefix="/users", tags=["user"])
 app.include_router(me.router, prefix="/me", tags=["me"])
 app.include_router(member_type.router, prefix="/member_types", tags=["member_type"])
+app.include_router(event.router, prefix="/events", tags=["event"])
 app.include_router(slot.router, prefix="/slot", tags=["slot"])
 app.include_router(member.router, prefix="/members", tags=["member"])
 app.include_router(door.router, tags=["door"])

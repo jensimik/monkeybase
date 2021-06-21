@@ -12,105 +12,97 @@ router = APIRouter()
 
 @router.post(
     "",
-    response_model=schemas.MemberType,
+    response_model=schemas.Event,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
-async def create_member_type(
-    member_type: schemas.MemberTypeCreate,
+async def create_event(
+    event: schemas.EventCreate,
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    create a member_type
+    create a event
     """
-    new_member_type = await crud.member_type.create(db, obj_in=member_type)
+    new_event = await crud.event.create(db, obj_in=event)
     await db.commit()
-    return new_member_type
+    return new_event
 
 
-@router.get("", response_model=schemas.Page[schemas.MemberType])
-async def member_type_list(
+@router.get("", response_model=schemas.Page[schemas.Event])
+async def event_list(
     paging: deps.Paging = Depends(deps.Paging),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    Get list of all member types
+    Get list of all events
     """
-    return await crud.member_type.get_multi_page(
+    return await crud.event.get_multi_page(
         db,
         per_page=paging.per_page,
         page=paging.page,
-        order_by=[models.MemberType.name.asc()],
+        order_by=[models.Event.name.asc()],
     )
 
 
-@router.get("/{member_type_id}", response_model=schemas.MemberType)
-async def get_member_type(
-    member_type_id: int,
+@router.get("/{event_id}", response_model=schemas.Event)
+async def get_event(
+    event_id: int,
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    Get a member type
+    Get a event
     """
-    if member_type := await crud.member_type.get(
-        db, models.MemberType.id == member_type_id
-    ):
-        return member_type
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="membertype not found"
-    )
+    if event := await crud.event.get(db, models.Event.id == event_id):
+        return event
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="event not found")
 
 
 @router.patch(
-    "/{member_type_id}",
-    response_model=schemas.MemberType,
+    "/{event_id}",
+    response_model=schemas.Event,
     dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
-async def update_member_type(
-    member_type_id: int,
-    update: schemas.MemberTypeUpdate,
+async def update_event(
+    event_id: int,
+    update: schemas.EventUpdate,
     db: AsyncSession = Depends(deps.get_db),
 ):
-    """update a member_type"""
+    """update a event"""
 
-    if member_type := await crud.member_type.update(
-        db, models.MemberType.id == member_type_id, obj_in=update
-    ):
+    if event := await crud.event.update(db, models.Event.id == event_id, obj_in=update):
         await db.commit()
-        return member_type
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail="membertype not found"
-    )
+        return event
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="event not found")
 
 
 @router.delete(
-    "/{member_type_id}",
+    "/{event_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
-async def delete_memeber_type(
-    member_type_id: int,
+async def delete_event(
+    event_id: int,
     db: AsyncSession = Depends(deps.get_db),
 ):
-    """disable a member_type"""
+    """disable a event"""
 
-    if await crud.member.count(db, models.Member.product_id == member_type_id):
+    if await crud.member.count(db, models.Member.product_id == event_id):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="cannot disable member_type when active members on it",
+            detail="cannot disable event when active members on it",
         )
 
-    await crud.member_type.remove(db, models.MemberType.id == member_type_id)
+    await crud.event.remove(db, models.Event.id == event_id)
     await db.commit()
 
 
 @router.post(
-    "/{member_type_id}/reserve_a_slot",
+    "/{event_id}/reserve_a_slot",
     response_model=Union[schemas.WaitingList, schemas.Slot],
 )
 async def reserve_a_slot(
     response: Response,
-    member_type_id: int,
+    event_id: int,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Union[models.Slot, models.WaitingList]:
@@ -119,7 +111,7 @@ async def reserve_a_slot(
     # but can also be from a previous open reservation slot if accidential hit page-refresh
     if slot := await crud.slot.get(
         db,
-        models.Slot.product_id == member_type_id,
+        models.Slot.product_id == event_id,
         models.Slot.user_id == user.id,
         models.Slot.reserved_until > datetime.datetime.utcnow(),
     ):
@@ -128,7 +120,7 @@ async def reserve_a_slot(
     # if already on waitinglist then return that fast
     if waiting := await crud.waiting_list.get(
         db,
-        models.WaitingList.product_id == member_type_id,
+        models.WaitingList.product_id == event_id,
         models.WaitingList.user_id == user.id,
     ):
         response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
@@ -138,33 +130,19 @@ async def reserve_a_slot(
     if member := await crud.member.get(
         db,
         models.Member.user_id == user.id,
-        models.Member.product_id == member_type_id,
+        models.Member.product_id == event_id,
         models.Member.active == True,
     ):
-        # if already a member - then you are allowed to resubscribe from 1 december until exire - create a new slot for you here
-        today = datetime.date.today()
-        if any([today.month == 12, today.month == 1 and today <= member.date_end]):
-            if slot := await crud.slot.create(
-                db,
-                obj_in={
-                    "user_id": user.id,
-                    "product_id": member_type_id,
-                    "reserved_until": datetime.datetime.utcnow()
-                    + datetime.timedelta(days=14),
-                },
-            ):
-                await db.commit()
-                return slot
         # if outside resubscribe window then raise error
         raise HTTPException(
             status_code=422,
-            detail="you are already a member of this membertype and outside resubscribe window",
+            detail="you are already a member of this event",
         )
 
     # if not a member already - then try to get an open available slot
     if slot := await crud.slot.get(
         db,
-        models.Slot.product_id == member_type_id,
+        models.Slot.product_id == event_id,
         models.Slot.user_id.is_(None),
         order_by=[models.Slot.reserved_until.asc()],
         limit=True,
@@ -186,7 +164,7 @@ async def reserve_a_slot(
 
     # if no available slot then put on waitinglist
     if waiting := await crud.waiting_list.create(
-        db, obj_in={"product_id": member_type_id, "user_id": user.id}
+        db, obj_in={"product_id": event_id, "user_id": user.id}
     ):
         await db.commit()
         response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
@@ -199,20 +177,20 @@ async def reserve_a_slot(
 
 
 @router.get(
-    "/{member_type_id}/members",
+    "/{event_id}/members",
     response_model=schemas.Page[schemas.MemberUser],
     dependencies=[Security(deps.get_current_user_id, scopes=["admin"])],
 )
 async def member_list(
-    member_type_id: int,
+    event_id: int,
     paging: deps.Paging = Depends(deps.Paging),
     q: deps.Q = Depends(deps.Q),
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     """
-    Get list of all member for this membership_type
+    Get list of all member for this event
     """
-    args = [models.Member.product_id == member_type_id]
+    args = [models.Member.product_id == event_id]
     if q.q:
         args.append(
             sa.or_(

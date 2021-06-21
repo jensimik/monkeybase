@@ -9,6 +9,7 @@ from .member import (
     MemberUser,
 )
 from .member_type import MemberType, MemberTypeCreate, MemberTypeInDB, MemberTypeUpdate
+from .event import Event, EventCreate, EventInDB, EventUpdate
 from .product import Product, ProductCreate, ProductUpdate
 from .slot import Slot, SlotCreate, SlotInDB, SlotUpdate
 from .waiting_list import WaitingList, WaitingListCreate, WaitingListUpdate
