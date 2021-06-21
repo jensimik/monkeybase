@@ -10,7 +10,17 @@ from ..core.security import (
     get_password_hash,
     verify_password,
     verify_password_reset_token,
+    generate_webauthn_state_token,
+    verify_webauthn_staten_token,
 )
+
+
+def test_webauthn_state_token(user_basic: models.User):
+    token = generate_webauthn_state_token(state={}, user=user_basic)
+
+    decoded = verify_webauthn_staten_token(token=token)
+
+    assert decoded["user_id"] == user_basic.id
 
 
 def test_password_reset_token():

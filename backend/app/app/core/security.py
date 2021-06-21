@@ -5,6 +5,7 @@ from fastapi.security import APIKeyCookie
 from fido2.server import Fido2Server
 from fido2.webauthn import PublicKeyCredentialRpEntity
 from jose import jwt
+from loguru import logger
 from passlib.context import CryptContext
 
 from .. import models
@@ -22,14 +23,13 @@ ALGORITHM = "HS256"
 def create_access_token(
     user: models.User, expires_delta: Optional[timedelta] = None
 ) -> str:
-    data = {"sub": str(user.id), "scopes": user.scopes.split(",")}
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    data.update({"exp": expire})
+    data = {"sub": str(user.id), "scopes": user.scopes.split(","), "exp": expire}
     encoded_jwt = jwt.encode(data, settings.SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": encoded_jwt, "token_type": "bearer"}
 
@@ -45,10 +45,9 @@ def get_password_hash(password: str) -> str:
 def generate_password_reset_token(email: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.utcnow()
-    expires = now + delta
-    exp = expires.timestamp()
+    exp = now + delta
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email},
+        {"exp": exp, "nbf": now, "aud": "password_reset", "sub": email},
         settings.SECRET_KEY,
         algorithm="HS256",
     )
@@ -57,7 +56,9 @@ def generate_password_reset_token(email: str) -> str:
 
 def verify_password_reset_token(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, audience="password_reset", algorithms=["HS256"]
+        )
         return decoded_token["sub"]
     except jwt.JWTError:
         return None
@@ -65,12 +66,9 @@ def verify_password_reset_token(token: str) -> Optional[str]:
 
 def generate_webauthn_state_token(state: dict, user: models.User) -> str:
     _state = state.copy()
-    _state["user_id"] = user.id
-    delta = timedelta(minutes=5)
     now = datetime.utcnow()
-    expires = now + delta
-    exp = expires.timestamp()
-    _state.update({"exp": exp})
+    exp = now + timedelta(minutes=5)
+    _state.update({"exp": exp, "nbf": now, "aud": "webauthn_state", "user_id": user.id})
     encoded_jwt = jwt.encode(
         _state,
         settings.SECRET_KEY,
@@ -81,7 +79,10 @@ def generate_webauthn_state_token(state: dict, user: models.User) -> str:
 
 def verify_webauthn_staten_token(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, audience="webauthn_state", algorithms=["HS256"]
+        )
         return decoded_token
     except jwt.JWTError as ex:
+        logger.exception(f"failed with {ex}")
         return None
