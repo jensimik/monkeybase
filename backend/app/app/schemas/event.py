@@ -11,12 +11,18 @@ class EventBase(BaseModel):
     name_short: Optional[str] = None
     slot_enabled: Optional[bool] = None
     slot_limit: Optional[int] = None
+    date_signup_deadline: Optional[datetime] = None
+    date_start: Optional[datetime] = None
+    date_end: Optional[datetime] = None
 
 
 # Properties to receive via API on creation
 class EventCreate(EventBase):
     name: str
     name_short: str
+    date_signup_deadline: datetime
+    date_start: datetime
+    date_end: datetime
 
 
 # Properties to receive via API on update
