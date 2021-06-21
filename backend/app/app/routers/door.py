@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.config import settings
+from ..core.utils import tz_now
 from ..utils.models_utils import DoorAccessEnum
 
 router = APIRouter()
@@ -45,7 +46,6 @@ async def access_door(
             ).selectinload(models.Member.product.and_(models.Product.active == True))
         ],
     ):
-        now = datetime.datetime.utcnow()
         for member in user.member:
             if not isinstance(member.product, models.MemberType):
                 continue
@@ -53,7 +53,7 @@ async def access_door(
                 [
                     member.product.door_access == DoorAccessEnum.FULL,
                     member.product.door_access == DoorAccessEnum.MORNING
-                    and (7 <= now.hour <= 16),
+                    and (7 <= tz_now().hour <= 15),
                 ]
             ):
                 await crud.door_event.create(db, obj_in={"user_id": user.id})

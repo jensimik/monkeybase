@@ -1,6 +1,7 @@
 import secrets
 from typing import Any, Dict, List, Optional, Union
 
+from dateutil.tz import tz, gettz
 from pydantic import AnyHttpUrl, BaseSettings, EmailStr, HttpUrl, PostgresDsn, validator
 
 
@@ -65,6 +66,15 @@ class Settings(BaseSettings):
     SENDGRID_FROM_NAME: Optional[str] = None
 
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+
+    TZ_STR: str = "Europe/Copenhagen"
+    TZ: Optional[tz.tzfile] = None
+
+    @validator("TZ", pre=True)
+    def get_tz(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+        if isinstance(v, tz.tzfile):
+            return v
+        return gettz(values.get("TZ_STR"))
 
     class Config:
         case_sensitive = True

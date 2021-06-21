@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, Dict, List
 
 import aiohttp
@@ -8,6 +7,7 @@ from fastapi import APIRouter, Depends, status
 
 from .. import deps
 from ..core.custom_swagger import get_swagger_ui_html
+from ..core.utils import tz_today
 
 router = APIRouter()
 
@@ -21,8 +21,8 @@ async def opening_hours(
     """try to get opening hours for today+7days from kk.dk api"""
     # date_from = datetime.date.today() + relativedelta(weekday=MO(-1))
     # date_to = datetime.date.today() + relativedelta(weekday=SU)
-    date_from = datetime.date.today()
-    date_to = datetime.date.today() + relativedelta(days=7)
+    date_from = tz_today()
+    date_to = date_from + relativedelta(days=7)
     url = URL.format(date_from=date_from, date_to=date_to)
     async with session.get(url) as resp:
         data = await resp.json()

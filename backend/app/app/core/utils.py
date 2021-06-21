@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum, unique
 from typing import Any, Dict, List
 
@@ -5,6 +6,14 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Attachment, From, Mail
 
 from .config import settings
+
+
+def tz_now():
+    return datetime.datetime.now(settings.TZ)
+
+
+def tz_today():
+    return tz_now().date()
 
 
 @unique
