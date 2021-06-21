@@ -5,7 +5,7 @@ python-jose>=3.3.0
 cryptography>=3.4.7
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.5
-fido2>=0.9.1
+fido2==0.4.0
 
 # db stuff
 # use this sqlalchemy commit until it is rolled out in 1.4.18
