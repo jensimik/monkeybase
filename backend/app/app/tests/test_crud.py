@@ -41,3 +41,24 @@ async def test_update(async_db, fake_name):
     )
 
     assert orig_name != user.name
+
+
+async def test_delete(async_db):
+    user = await crud.user.get(async_db, models.User.id == 1)
+    assert user is not None
+
+    await crud.user.remove(async_db, models.User.id == 1)
+
+    user = await crud.user.get(async_db, models.User.id == 1)
+
+    assert user is None
+
+    user = await crud.user.get(async_db, models.User.id == 1, only_active=False)
+
+    assert user is not None
+
+
+async def test_count(async_db):
+    count = await crud.user.count(async_db, models.User.id.in_([1, 2, 3, 4, 5]))
+
+    assert count == 5
