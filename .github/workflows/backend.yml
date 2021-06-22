@@ -41,13 +41,9 @@ jobs:
         python-version: 3.9
     - name: cache dependencies
       uses: actions/cache@v2
-      env:
-        cache-name: pip-cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('backend/requirements.txt') }}-${{ hashFiles('backend/dev-requirements.txt') }}
-        # path: ~/.cache/pip
-        # key: ${{ env.cache-name }}-${{ hashFiles('backend/requirements.txt') }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
