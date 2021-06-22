@@ -47,6 +47,7 @@ async def test_delete(async_db):
     user = await crud.user.get(async_db, models.User.id == 1)
     assert user is not None
 
+    # single remove
     await crud.user.remove(async_db, models.User.id == 1)
 
     user = await crud.user.get(async_db, models.User.id == 1)
@@ -56,6 +57,19 @@ async def test_delete(async_db):
     user = await crud.user.get(async_db, models.User.id == 1, only_active=False)
 
     assert user is not None
+
+    # multi remove
+    await crud.user.remove(async_db, models.User.id.in_([2, 3, 4]))
+    count = await crud.user.count(async_db, models.User.id.in_([2, 3, 4]))
+    assert count == 0
+
+    users = await crud.user.get_multi(async_db, models.User.id.in_([2, 3, 4]))
+    assert len(users) == 0
+
+    users = await crud.user.get_multi(
+        async_db, models.User.id.in_([2, 3, 4]), only_active=False
+    )
+    assert len(users) == 3
 
 
 async def test_count(async_db):
