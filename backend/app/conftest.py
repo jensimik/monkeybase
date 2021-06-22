@@ -4,6 +4,8 @@ import pytest
 import sqlalchemy as sa
 from faker import Faker
 from fastapi.testclient import TestClient
+from pytest_pgsql.time import SQLAlchemyFreezegun
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app import models
@@ -11,21 +13,51 @@ from app.core.config import settings
 from app.core.security import get_password_hash
 from app.main import app
 from app.utils.models_utils import StripeStatusEnum
-from pytest_pgsql.time import SQLAlchemyFreezegun
-from app.db.base import engine
-
-
-engine = sa.create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, future=True)
-session = sessionmaker(engine, expire_on_commit=False, future=True)
-
 
 fake = Faker()
 
 
+@pytest.fixture
+def fake_name():
+    yield fake.name()
+
+
 @pytest.fixture(scope="session")
 def db():
+    engine = sa.create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, future=True)
+    session = sessionmaker(engine, expire_on_commit=False, future=True)
     with session() as s:
         yield s
+
+
+@pytest.fixture(scope="function")
+async def async_engine():
+    DATABASE_URL = settings.SQLALCHEMY_DATABASE_URI.replace(
+        "postgresql://", "postgresql+asyncpg://"
+    )
+    engine = create_async_engine(DATABASE_URL)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def async_db(async_engine):
+
+    connection = await async_engine.connect()
+    trans = await connection.begin()
+
+    Session = sessionmaker(
+        connection, expire_on_commit=False, future=True, class_=AsyncSession
+    )
+    session = Session()
+    try:
+        yield session
+    finally:
+        await session.close()
+        await trans.rollback()
+        await connection.close()
 
 
 @pytest.fixture(scope="session")

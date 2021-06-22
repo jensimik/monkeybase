@@ -34,7 +34,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         only_active: Optional[bool] = True,
         order_by: Optional[List[sa.sql.elements.UnaryExpression]] = [],
         limit: Optional[bool] = None,
-        for_update: Optional[bool] = None,
+        for_update: Optional[bool] = False,
         skip_locked: Optional[bool] = True,
     ) -> Optional[ModelType]:
         query = sa.future.select(self.model)
@@ -152,7 +152,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = query.where(self.model.active == True, *args)
         else:
             query = query.where(*args)
-        query = sa.select(self.model).from_statement(query.returning(self.model))
+        query = (
+            sa.select(self.model)
+            .from_statement(query.returning(self.model))
+            .execution_options(populate_existing=True)
+        )
         if multi:
             try:
                 return (await db.execute(query)).scalar().all()

@@ -1,5 +1,6 @@
 pytest
-pytest-asyncio
+# pytest-asyncio
+alt-pytest-asyncio
 pytest-lazy-fixture
 pytest-cov
 pytest
