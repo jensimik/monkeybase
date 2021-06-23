@@ -1,14 +1,16 @@
 import json
+import random
+import string
 import time
+from unittest import mock
 
 import pytest
-from unittest import mock
 from fastapi import status
 from fastapi.testclient import TestClient
 from stripe.webhook import WebhookSignature
 
-from ..core.config import settings
 from .. import models
+from ..core.config import settings
 
 PAYMENT_INTENT_CREATED = {
     "id": "evt_1J0A2uB3jLVglL0odkBjie9i",
@@ -80,13 +82,20 @@ PAYMENT_INTENT_SUCCEEDED = PAYMENT_INTENT_CREATED.copy()
 PAYMENT_INTENT_SUCCEEDED["type"] = "payment_intent.succeeded"
 
 
-def _webhook_post(client: TestClient, payload: dict):
+def _webhook_post(client: TestClient, payload: dict, make_invalid=False):
     data = json.dumps(payload)
     timestamp = int(time.time())
     signed_payload = f"{timestamp}.{data}"
     signature = WebhookSignature._compute_signature(
         signed_payload, settings.STRIPE_WEBHOOK_SECRET
     )
+    if make_invalid:
+        list_signature = list(signature)
+        for _ in range(random.randint(5, 10)):
+            list_signature[random.randint(0, len(list_signature) - 1)] = random.choice(
+                [string.ascii_lowercase]
+            )
+        signature = "".join(list_signature)
     headers = {"stripe-signature": f"t={timestamp},v1={signature}"}
     return client.post("/stripe-webhook", headers=headers, data=data)
 
@@ -114,3 +123,6 @@ def test_webhook_payment_intent_succeeded(
     response = auth_client_basic.get("/me")
     user = response.json()
     assert user["member"][0]["product"]["id"] == 1
+
+    response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED, make_invalid=True)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
