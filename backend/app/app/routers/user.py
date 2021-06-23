@@ -108,6 +108,23 @@ async def create_user(
     return user
 
 
+@router.post(
+    "/signup",
+    response_model=schemas.User,
+    status_code=status.HTTP_201_CREATED,
+)
+async def signup_user(
+    create: schemas.UserCreate,
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    obj_in = create.dict(exclude_unset=True)
+    password = obj_in.pop("password")
+    obj_in["hashed_password"] = get_password_hash(password)
+    user = await crud.user.create(db, obj_in=obj_in)
+    await db.commit()
+    return user
+
+
 @router.patch(
     "/{user_id}",
     response_model=schemas.User,

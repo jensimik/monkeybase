@@ -1,49 +1,44 @@
 from datetime import date, datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 
+
+NAME = constr(min_length=4, max_length=50)
+PASSWORD = constr(min_length=4, max_length=50)
 
 # Shared properties
 class UserBase(BaseModel):
-    id: Optional[int] = None
     email: Optional[EmailStr] = None
-    active: Optional[bool] = True
-    name: Optional[str] = None
+    name: Optional[NAME] = None
     birthday: Optional[date] = None
-    enabled_2fa: Optional[bool] = None
 
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     email: EmailStr
-    password: str
+    password: PASSWORD
     birthday: date
 
 
 # Properties to receive via API on update
 class UserUpdate(UserBase):
-    hashed_password: Optional[str] = None
+    enabled_2fa: Optional[bool] = None
+    password: Optional[PASSWORD] = None
 
 
 class UserUpdateMe(BaseModel):
     email: Optional[EmailStr] = None
-    name: Optional[str] = None
+    name: Optional[NAME] = None
     birthday: Optional[date] = None
     enabled_2fa: Optional[bool] = None
+    password: Optional[PASSWORD] = None
 
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
-
-
-# dont show user id in API - only the UUID
-class UserInDBBase2(UserBase):
+    active: Optional[bool] = True
+    enabled_2fa: Optional[bool] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -52,7 +47,7 @@ class UserInDBBase2(UserBase):
 
 
 # Additional properties to return via API
-class User(UserInDBBase2):
+class User(UserInDBBase):
     member: "List[MemberMemberType]" = []
 
 

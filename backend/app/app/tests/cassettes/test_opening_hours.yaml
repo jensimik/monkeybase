@@ -1,0 +1,94 @@
+interactions:
+- request:
+    body: null
+    headers: {}
+    method: GET
+    uri: https://kulturn.kk.dk/opening_hours/instances?from_date=2021-06-23&to_date=2021-06-30&nid=1706
+  response:
+    body:
+      string: '[{"instance_id":21270,"nid":1706,"date":"2021-06-28","start_time":"08:00","end_time":"23:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21266,"customised":"0","id":21270},{"instance_id":21280,"nid":1706,"date":"2021-06-29","start_time":"08:00","end_time":"23:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21275,"customised":"0","id":21280},{"instance_id":21289,"nid":1706,"date":"2021-06-23","start_time":"08:00","end_time":"23:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21285,"customised":"0","id":21289},{"instance_id":21290,"nid":1706,"date":"2021-06-30","start_time":"08:00","end_time":"23:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21285,"customised":"0","id":21290},{"instance_id":21299,"nid":1706,"date":"2021-06-24","start_time":"08:00","end_time":"23:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21295,"customised":"0","id":21299},{"instance_id":21241,"nid":1706,"date":"2021-06-25","start_time":"08:00","end_time":"21:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21236,"customised":"0","id":21241},{"instance_id":21252,"nid":1706,"date":"2021-06-26","start_time":"09:00","end_time":"21:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21247,"customised":"0","id":21252},{"instance_id":21261,"nid":1706,"date":"2021-06-27","start_time":"09:00","end_time":"21:00","category_tid":null,"notice":null,"repeat_rule":null,"repeat_end_date":null,"original_instance_id":21257,"customised":"0","id":21261}]'
+    headers:
+      Accept-Ranges:
+      - bytes
+      Age:
+      - '948'
+      CMS-Cache:
+      - MISS
+      Cache-Control:
+      - public, max-age=21600
+      Content-Encoding:
+      - gzip
+      Content-Language:
+      - da
+      Content-Length:
+      - '256'
+      Content-Security-Policy:
+      - 'default-src ''self'' *.kk.dk *.testkkms.kk.dk; base-uri ''self''; child-src
+        ''self'' *.kk.dk star.23video.com dw3.dk kk.halbooking.dk ipaper.ipapercms.dk
+        kk.sites.itera.dk app.ivolunteer.dk www.video.kk.dk kk-bioposer.dk vemcount.app
+        l.vemcount.com player.vimeo.com www.youtube.com; connect-src ''self'' *.kk.dk
+        dawa.aws.dk covid-19-kort.dk ibikecph.dk kortforsyningen.kms.dk cphvolunteers.kubedata.dk
+        geoserver.plandata.dk *.septima.dk id.siteimprove.com my2.siteimprove.com;
+        font-src ''self'' *.kk.dk cphvolunteers.kubedata.dk cdn.materialdesignicons.com
+        *.septima.dk data:; form-action ''self'' *.kk.dk centernordvest.us10.list-manage.com
+        familieplejekk.metimus.dk idp.tabulex.net kbenhavns-kommune.clients.ubivox.com
+        *.uxmail.io www.workindenmark.dk; frame-ancestors ''self'' *.kk.dk; frame-src
+        ''self'' ''unsafe-eval'' *.kk.dk www.google.com bif.23video.com fm.23video.com
+        star.23video.com kkpdfgen.dis-play.dk dw3.dk chat.ecmr.biz kk.halbooking.dk
+        ipaper.ipapercms.dk kk.sites.itera.dk app.ivolunteer.dk www.video.kk.dk kk-bioposer.dk
+        cphvolunteers.kubedata.dk openstreetmap.org my2.siteimprove.com trafikkort.vejdirektoratet.dk
+        vemcount.app l.vemcount.com player.vimeo.com youtu.be www.youtube.com www.youtube-nocookie.com;
+        img-src ''self'' *.kk.dk *.testkkms.kk.dk covid-19-kort.dk services.datafordeler.dk
+        www.defgo.net app01.defgosoftware.net *.services.kortforsyningen.dk cphvolunteers.kubedata.dk
+        www.kultunaut.dk *.mqcdn.com *.netlify.app *.openstreetmap.org kec.plan2learn.dk
+        *.septima.dk ssl.siteimprove.com 259887.global.siteimproveanalytics.io www.skrivopgave.dk
+        kkkortdata.spatialsuite.dk teambade.dk api.vandudsigten.dk data: blob:; object-src
+        ''self'' ''unsafe-eval''; script-src ''self'' ''unsafe-eval'' ''unsafe-inline''
+        *.kk.dk dawa.aws.dk covid-19-kort.dk www.defgo.net chat.ecmr.biz fast.fonts.net
+        www.google.com ajax.googleapis.com cdn.jsdelivr.net cphvolunteers.kubedata.dk
+        www.kultunaut.dk *.netlify.app openstreetmap.org *.septima.dk septimamap.dk
+        cdn.siteimprove.net siteimproveanalytics.com responder.wt-safetag.com www.gstatic.com
+        data: blob:; style-src ''self'' ''unsafe-eval'' ''unsafe-inline'' *.kk.dk
+        dawa.aws.dk covid-19-kort.dk www.defgo.net chat.ecmr.biz fast.fonts.net cphvolunteers.kubedata.dk
+        cdn.materialdesignicons.com *.netlify.app *.septima.dk data:; worker-src ''self''
+        blob:; upgrade-insecure-requests; report-uri https://municipalityofcopenhagen.report-uri.com/r/d/csp/enforce'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 23 Jun 2021 14:25:56 GMT
+      Etag:
+      - '"1624458356-1"'
+      Expect-CT:
+      - max-age=604800, report-uri="https://municipalityofcopenhagen.report-uri.com/r/d/ct/enforce"
+      Last-Modified:
+      - Wed, 23 Jun 2021 14:25:56 GMT
+      Permissions-Policy:
+      - accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(),
+        microphone=(), payment=(), usb=(), interest-cohort=()
+      Referrer-Policy:
+      - no-referrer-when-downgrade
+      Server:
+      - webserver
+      Vary:
+      - Cookie,Accept-Encoding
+      Via:
+      - webcache
+      Webcache:
+      - HIT
+      Webcache-Hits:
+      - '3'
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Server-Name:
+      - '04'
+      X-XSS-Protection:
+      - 1; mode=block
+      grace:
+      - none
+    status:
+      code: 200
+      message: OK
+    url: https://kulturn.kk.dk/opening_hours/instances?from_date=2021-06-23&to_date=2021-06-30&nid=1706
+version: 1

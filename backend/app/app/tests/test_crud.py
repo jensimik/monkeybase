@@ -1,6 +1,8 @@
-import pytest
-from .. import crud, models
 import datetime
+
+import pytest
+
+from .. import crud, models
 
 
 @pytest.mark.parametrize(

@@ -116,6 +116,33 @@ def test_identicon(client: TestClient):
     assert response.status_code == status.HTTP_200_OK
 
 
+def test_signup(client: TestClient):
+    faker = Faker()
+    new_user_dict = {
+        "name": faker.name(),
+        "email": faker.email(),
+        "password": faker.password(),
+        "birthday": faker.date_of_birth(),
+    }
+    response = client.post("/users/signup", json=jsonable_encoder(new_user_dict))
+    assert response.status_code == status.HTTP_201_CREATED
+
+    data = response.json()
+
+    for x in ["name", "email", "birthday"]:
+        assert data[x] == str(new_user_dict[x])
+
+    # test login this new user
+    response = client.post(
+        "/auth/token",
+        data={
+            "username": new_user_dict["email"],
+            "password": new_user_dict["password"],
+        },
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
 @pytest.mark.parametrize(
     "c", [pytest.lazy_fixture("auth_client_basic"), pytest.lazy_fixture("client")]
 )
