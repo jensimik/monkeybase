@@ -1,17 +1,38 @@
+import pytest
 from .. import crud, models
 
 
-async def test_get(async_db):
-    user = await crud.user.get(async_db, models.User.id == 1)
-    assert user.id == 1
+@pytest.mark.parametrize(
+    "scoped_crud,model,id",
+    [
+        (crud.user, models.User, 1),
+        (crud.product, models.Product, 1),
+        (crud.event, models.Event, 3),
+        (crud.member_type, models.MemberType, 1),
+    ],
+)
+async def test_get(async_db, scoped_crud, model, id):
+    obj = await scoped_crud.get(async_db, model.id == id)
+    assert obj is not None
+    assert isinstance(obj, model)
+    assert obj.id == id
 
-    unknown = await crud.user.get(async_db, models.User.id == 999999)
+    unknown = await scoped_crud.get(async_db, model.id == 999999)
     assert unknown is None
 
 
-async def test_get_multi(async_db):
-    users = await crud.user.get_multi(async_db, models.User.id.in_([1, 2, 3]))
-    assert len(users) == 3
+@pytest.mark.parametrize(
+    "scoped_crud,model,ids",
+    [
+        (crud.user, models.User, [1, 2, 3]),
+        (crud.product, models.Product, [1]),
+        (crud.event, models.Event, [3]),
+        (crud.member_type, models.MemberType, [1, 2]),
+    ],
+)
+async def test_get_multi(async_db, scoped_crud, model, ids):
+    objs = await scoped_crud.get_multi(async_db, model.id.in_(ids))
+    assert len(objs) == len(ids)
 
 
 async def test_get_multi_page(async_db):
@@ -31,16 +52,25 @@ async def test_get_multi_page(async_db):
     assert page2["next"] != page["next"]
 
 
-async def test_update(async_db, fake_name):
-    user = await crud.user.get(async_db, models.User.id == 1)
+@pytest.mark.parametrize(
+    "scoped_crud,model,id",
+    [
+        (crud.user, models.User, 1),
+        (crud.product, models.Product, 1),
+        (crud.event, models.Event, 3),
+        (crud.member_type, models.MemberType, 1),
+    ],
+)
+async def test_update(async_db, fake_name, scoped_crud, model, id):
+    obj = await scoped_crud.get(async_db, model.id == id)
 
-    orig_name = user.name
+    orig_name = obj.name
 
-    user = await crud.user.update(
-        async_db, models.User.id == user.id, obj_in={"name": fake_name}
+    obj = await scoped_crud.update(
+        async_db, model.id == obj.id, obj_in={"name": fake_name}
     )
 
-    assert orig_name != user.name
+    assert orig_name != obj.name
 
 
 async def test_delete(async_db):

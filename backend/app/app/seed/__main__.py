@@ -51,8 +51,21 @@ async def seed_data():
             await conn.execute(q)
 
         for x in ["Event 1", "Event 2"]:
-            q = sa.insert(MemberType).values(
-                {"name": x, "name_short": x, "obj_type": "event"}
+            q = sa.insert(Event).values(
+                {
+                    "name": x,
+                    "name_short": x,
+                    "obj_type": "event",
+                    "date_signup_deadline": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                    "date_start": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                    "date_end": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                }
             )
             await conn.execute(q)
 
