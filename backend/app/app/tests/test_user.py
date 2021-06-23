@@ -111,6 +111,11 @@ def test_update_user(auth_client_admin: TestClient, fake_name):
     assert data2["name"] == fake_name
 
 
+def test_identicon(client: TestClient):
+    response = client.get("/users/1/identicon.png")
+    assert response.status_code == status.HTTP_200_OK
+
+
 @pytest.mark.parametrize(
     "c", [pytest.lazy_fixture("auth_client_basic"), pytest.lazy_fixture("client")]
 )
