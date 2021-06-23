@@ -24,7 +24,7 @@ def test_slots(db, client, user_admin):
 
     data = resp.json()
 
-    assert len(data["items"]) >= 80
+    assert len(data["items"]) >= 50
 
     # check if no members in far future
     freezer = SQLAlchemyFreezegun(engine.sync_engine)
