@@ -2,6 +2,7 @@ from loguru import logger
 import asyncio
 import sqlalchemy as sa
 import random
+from uuid import UUID, uuid4
 import datetime
 from loguru import logger
 from ..db.base import Base, engine
@@ -46,6 +47,7 @@ async def seed_data():
                     "name_short": x,
                     "obj_type": "member_type",
                     "door_access": DoorAccessEnum.FULL,
+                    "price": 1000,
                 }
             )
             await conn.execute(q)
@@ -65,6 +67,7 @@ async def seed_data():
                     "date_end": fake.date_this_year(
                         before_today=False, after_today=True
                     ),
+                    "price": 1000,
                 }
             )
             await conn.execute(q)
@@ -110,11 +113,12 @@ async def seed_data():
         )
         await conn.execute(q)
 
-        for x in range(5):
+        for _ in range(5):
             q = sa.insert(Slot).values(
                 {
-                    "product_id": full_membership.id,
+                    "product_id": 1,
                     "reserved_until": datetime.datetime.utcnow(),
+                    "key": uuid4().hex,
                 }
             )
             await conn.execute(q)
@@ -138,21 +142,30 @@ async def init_models():
 
 async def test():
     async with deps.get_db_context() as db:
-        user = await crud.user.get(
-            db,
-            models.User.id == 1,
-            options=[
-                sa.orm.selectinload(
-                    models.User.member.and_(models.Member.active == True)
-                ).selectinload(
-                    models.Member.product.and_(models.Product.active == True)
-                )
-            ],
+        slot = await crud.slot.get(
+            db, Slot.key == "ceb7c46a-9dcf-4a35-80ab-635eba9d114c", Slot.user_id == 122
         )
-        print(user)
-        for member in user.member:
-            print(member)
-            print(member.product)
+        print(slot)
+        exit()
+        slots = await crud.slot.get_multi(db)
+        for slot in slots:
+            print(isinstance(slot.key, UUID))
+            print(slot.key)
+        # user = await crud.user.get(
+        #     db,
+        #     models.User.id == 1,
+        #     options=[
+        #         sa.orm.selectinload(
+        #             models.User.member.and_(models.Member.active == True)
+        #         ).selectinload(
+        #             models.Member.product.and_(models.Product.active == True)
+        #         )
+        #     ],
+        # )
+        # print(user)
+        # for member in user.member:
+        #     print(member)
+        #     print(member.product)
 
 
 if __name__ == "__main__":
