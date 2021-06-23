@@ -7,9 +7,7 @@ from .base import CRUDBase
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    async def get_by_email(self, session: AsyncSession, email: str) -> User:
-        query = sa.select(User).where(User.email == email)
-        return (await session.execute(query)).scalar_one_or_none()
+    pass
 
 
 user = CRUDUser(User)
