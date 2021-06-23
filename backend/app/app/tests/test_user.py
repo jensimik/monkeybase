@@ -11,6 +11,15 @@ from ..db.base import engine
 from pytest_pgsql.time import SQLAlchemyFreezegun
 
 
+def test_get_user(auth_client_admin: TestClient):
+    response = auth_client_admin.get("/users/1")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert "email" in data
+
+
 def test_get_users(auth_client_admin: TestClient):
     response = auth_client_admin.get("/users")
     assert response.status_code == status.HTTP_200_OK
@@ -84,6 +93,22 @@ def test_create_user(auth_client_admin: TestClient, client: TestClient):
         },
     )
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_update_user(auth_client_admin: TestClient, fake_name):
+    response = auth_client_admin.get("/users/1")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    response = auth_client_admin.patch("/users/1", json={"name": fake_name})
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data2 = response.json()
+
+    assert data["name"] != data2["name"]
+    assert data2["name"] == fake_name
 
 
 @pytest.mark.parametrize(
