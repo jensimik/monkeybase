@@ -177,11 +177,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             query = sa.delete(self.model).where(*args).returning(self.model)
             return (await db.execute(query)).scalar_one_or_none()
         # just set obj to inactive
-        query = sa.update(self.model).where(*args).values({self.model.active: False})
+        query = sa.update(self.model).where(*args).values({"active": False})
         await db.execute(query)
 
     async def count(
-        self, db: AsyncSession, *args: List[sa.sql.elements.BinaryExpression]
+        self,
+        db: AsyncSession,
+        *args: List[sa.sql.elements.BinaryExpression],
+        only_active: Optional[bool] = True,
     ) -> int:
-        query = sa.select(sa.func.count(self.model.id)).where(*args)
+        query = sa.select(sa.func.count(self.model.id))
+        if only_active:
+            query = query.where(*args, self.model.active == True)
+        else:
+            query = query.where(*args)
         return (await db.execute(query)).scalar()
