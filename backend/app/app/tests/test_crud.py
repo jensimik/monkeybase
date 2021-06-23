@@ -1,5 +1,6 @@
 import pytest
 from .. import crud, models
+import datetime
 
 
 @pytest.mark.parametrize(
@@ -73,36 +74,78 @@ async def test_update(async_db, fake_name, scoped_crud, model, id):
     assert orig_name != obj.name
 
 
-async def test_delete(async_db):
-    user = await crud.user.get(async_db, models.User.id == 1)
-    assert user is not None
+@pytest.mark.parametrize(
+    "scoped_crud,model,id,ids",
+    [
+        (crud.user, models.User, 1, [1, 2, 3]),
+        (crud.product, models.Product, 1, [1]),
+        (crud.event, models.Event, 3, [3]),
+        (crud.member_type, models.MemberType, 1, [1, 2]),
+    ],
+)
+async def test_delete(async_db, scoped_crud, model, id, ids):
+    obj = await scoped_crud.get(async_db, model.id == id)
+    assert obj is not None
 
     # single remove
-    await crud.user.remove(async_db, models.User.id == 1)
+    await scoped_crud.remove(async_db, model.id == id)
 
-    user = await crud.user.get(async_db, models.User.id == 1)
+    obj = await scoped_crud.get(async_db, model.id == id)
+    assert obj is None
 
-    assert user is None
+    obj = await scoped_crud.get(async_db, model.id == id, only_active=False)
 
-    user = await crud.user.get(async_db, models.User.id == 1, only_active=False)
-
-    assert user is not None
+    assert obj is not None
 
     # multi remove
-    await crud.user.remove(async_db, models.User.id.in_([2, 3, 4]))
-    count = await crud.user.count(async_db, models.User.id.in_([2, 3, 4]))
+    await scoped_crud.remove(async_db, model.id.in_(ids))
+
+    count = await scoped_crud.count(async_db, model.id.in_(ids))
     assert count == 0
 
-    users = await crud.user.get_multi(async_db, models.User.id.in_([2, 3, 4]))
-    assert len(users) == 0
+    count = await scoped_crud.count(async_db, model.id.in_(ids))
+    assert count == 0
 
-    users = await crud.user.get_multi(
-        async_db, models.User.id.in_([2, 3, 4]), only_active=False
-    )
-    assert len(users) == 3
+    objs = await scoped_crud.get_multi(async_db, model.id.in_(ids))
+    assert len(objs) == 0
+
+    objs = await scoped_crud.get_multi(async_db, model.id.in_(ids), only_active=False)
+    assert len(objs) == len(ids)
 
 
-async def test_count(async_db):
-    count = await crud.user.count(async_db, models.User.id.in_([1, 2, 3, 4, 5]))
+@pytest.mark.parametrize(
+    "scoped_crud,model,ids",
+    [
+        (crud.user, models.User, [1, 2, 3]),
+        (crud.product, models.Product, [1]),
+        (crud.event, models.Event, [3]),
+        (crud.member_type, models.MemberType, [1, 2]),
+    ],
+)
+async def test_count(async_db, scoped_crud, model, ids):
+    count = await scoped_crud.count(async_db, model.id.in_(ids))
 
-    assert count == 5
+    assert count == len(ids)
+
+
+@pytest.mark.parametrize(
+    "scoped_crud,model,obj_in",
+    [
+        (
+            crud.user,
+            models.User,
+            {
+                "name": "n",
+                "email": "t@t.dk",
+                "hashed_password": "h",
+                "birthday": datetime.datetime.utcnow(),
+            },
+        ),
+        (crud.event, models.Event, {"name": "e", "name_short": "e"}),
+        (crud.member_type, models.MemberType, {"name": "mt", "name_short": "mt"}),
+    ],
+)
+async def test_create(async_db, scoped_crud, model, obj_in):
+    obj = await scoped_crud.create(async_db, obj_in=obj_in)
+
+    assert isinstance(obj, model)
