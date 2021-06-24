@@ -17,7 +17,6 @@ def create_payment_intent(
         amount=amount,
         currency="dkk",
         payment_method_types=["card"],
-        confirm=True,
         metadata=metadata,
     )
 

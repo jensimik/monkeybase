@@ -1,4 +1,5 @@
 import datetime
+import uuid
 
 import pytest
 import sqlalchemy as sa
@@ -112,6 +113,7 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
                 "stripe_id": fake.md5(),
                 "user_id": user_basic.id,
                 "product_id": 1,
+                "key": uuid.uuid4().hex,
                 "stripe_status": StripeStatusEnum.PENDING,
                 "reserved_until": datetime.datetime.utcnow()
                 + datetime.timedelta(hours=1),
