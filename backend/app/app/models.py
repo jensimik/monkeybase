@@ -117,7 +117,7 @@ class Slot(Base, TimestampableMixin):
 
     id = sa.Column(sa.Integer, sa.Identity(start=1, increment=1), primary_key=True)
     active = sa.Column(sa.Boolean, default=True, nullable=False)
-    key = sa.Column(sa_pg.UUID, nullable=False, default=gen_uuid())
+    key = sa.Column(sa.String, nullable=False, index=True)
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
     stripe_id = sa.Column(sa.String)
     stripe_status = sa.Column(

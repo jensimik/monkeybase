@@ -2,7 +2,10 @@ import datetime
 from typing import Any, Union
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Security, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
@@ -106,17 +109,20 @@ async def delete_memeber_type(
 
 @router.post(
     "/{member_type_id}/reserve_a_slot",
-    response_model=Union[schemas.WaitingList, schemas.Slot],
+    response_model=schemas.Slot,
+    responses={429: {"model": schemas.WaitingList}},
 )
 async def reserve_a_slot(
     response: Response,
     member_type_id: int,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
-) -> Union[models.Slot, models.WaitingList]:
+) -> Union[models.WaitingList, models.Slot]:
     # first try to get a reservation in my name - usually created from a waiting list
     # or if a slot have been made to renew a membership
     # but can also be from a previous open reservation slot if accidential hit page-refresh
+    logger.info(f"trying to reserve a slot for {member_type_id}")
+
     if slot := await crud.slot.get(
         db,
         models.Slot.product_id == member_type_id,
@@ -131,8 +137,12 @@ async def reserve_a_slot(
         models.WaitingList.product_id == member_type_id,
         models.WaitingList.user_id == user.id,
     ):
-        response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
-        return waiting
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content=jsonable_encoder(schemas.WaitingList.from_orm(waiting).dict()),
+        )
+        # response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        # return waiting
 
     # check if user is already a member of this membertype already
     if member := await crud.member.get(
@@ -176,12 +186,14 @@ async def reserve_a_slot(
         slot = await crud.slot.update(
             db,
             models.Slot.id == slot.id,
-            obj_in=schemas.SlotUpdate(
-                user_id=user.id,
-                reserved_until=datetime.datetime.utcnow() + datetime.timedelta(days=2),
-            ),
+            obj_in={
+                "user_id": user.id,
+                "reserved_until": datetime.datetime.utcnow()
+                + datetime.timedelta(days=2),
+            },
         )
         await db.commit()
+        logger.info(slot)
         return slot
 
     # if no available slot then put on waitinglist
@@ -189,8 +201,12 @@ async def reserve_a_slot(
         db, obj_in={"product_id": member_type_id, "user_id": user.id}
     ):
         await db.commit()
-        response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
-        return waiting
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content=jsonable_encoder(schemas.WaitingList.from_orm(waiting).dict()),
+        )
+        # response.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        # return waiting
 
     # last resort
     raise HTTPException(

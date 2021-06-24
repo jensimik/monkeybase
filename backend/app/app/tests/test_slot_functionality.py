@@ -2,16 +2,42 @@ import datetime
 
 import pytest
 import sqlalchemy as sa
-from ..db.base import engine
+from fastapi import status
+from fastapi.testclient import TestClient
 from pytest_pgsql.time import SQLAlchemyFreezegun
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, models
+from ..db.base import engine
 
 
-# db, time,
-def test_slots(db, client, user_admin):
-    # q = sa.select(models.Member).where(models.Member.active == True)
-    # assert len(db.execute(q).scalars().all()) == 80
+@pytest.mark.vcr()
+def test_slots(auth_client_basic: TestClient):
+
+    # no free slot in member_type 2 - return waiting list 429
+    response = auth_client_basic.post("/member_types/2/reserve_a_slot")
+
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    # get the free slot in member_type 1
+    response = auth_client_basic.post("/member_types/1/reserve_a_slot")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    slot_key = data["key"]
+
+    response = auth_client_basic.post(f"/slots/{slot_key}/create_payment_intent")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert "secret" in data["client_secret"]
+
+
+def test_member(db, client, user_admin):
 
     response = client.post(
         "/auth/token", data={"username": user_admin.email, "password": "admin"}

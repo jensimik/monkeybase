@@ -2,6 +2,7 @@ from loguru import logger
 import asyncio
 import sqlalchemy as sa
 import random
+import uuid
 import datetime
 from loguru import logger
 from ..db.base import Base, engine
@@ -12,50 +13,45 @@ from faker import Faker
 from ..utils.models_utils import DoorAccessEnum
 
 
-# async def test():
-#     async with deps.get_db_context() as conn:
-#         # engine.begin() as conn:
-#         q = sa.select(User)
-#         data = await conn.execute(q)
-#         print(data)
-#         print(data.scalars().all())
-
-
 async def seed_data():
     fake = Faker()
     # async with engine.begin() as conn:
-    async with deps.get_db_context() as conn:
-        # engine.begin() as conn:
-        # load uuid extension
-        await conn.execute(sa.text('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'))
-        q = sa.insert(User).values(
-            {
-                "name": "Some Name",
-                "email": "test@test.dk",
-                "birthday": fake.date_of_birth(),
-                "hashed_password": get_password_hash("test"),
-                "scopes": "basic,admin,other",
-                "door_id": "some-door-id",
-            }
-        )
-        await conn.execute(q)
-        for x in ["Full membership", "Morning membership"]:
-            q = sa.insert(MemberType).values(
+    async with deps.get_db_context() as db:
+        # create 100 users
+        password_hash = get_password_hash("test")
+        for x in range(1, 100):
+            await crud.user.create(
+                db,
                 {
-                    "name": x,
-                    "name_short": x,
-                    "obj_type": "member_type",
-                    "door_access": DoorAccessEnum.FULL,
-                }
+                    "name": f"name {x}",
+                    "email": f"test{x}@test.dk",
+                    "birthday": fake.date_of_birth(),
+                    "hashed_password": password_hash,
+                    "scopes": "basic",
+                    "door_id": f"some-door-id{x}",
+                },
             )
-            await conn.execute(q)
-
-        for x in ["Event 1", "Event 2"]:
-            q = sa.insert(Event).values(
+        # create 2 member_types
+        for x, door_access in [
+            ("Full membership", DoorAccessEnum.FULL),
+            ("Morning membership", DoorAccessEnum.MORNING),
+        ]:
+            await crud.member_type.create(
+                db,
                 {
                     "name": x,
-                    "name_short": x,
-                    "obj_type": "event",
+                    "name_short": x[:5],
+                    "door_access": door_access,
+                    "price": 1000,
+                },
+            )
+        # create 2 events
+        for x in ["Event 1", "Event 2"]:
+            await crud.event.create(
+                db,
+                {
+                    "name": x,
+                    "name_short": x[:3],
                     "date_signup_deadline": fake.date_this_year(
                         before_today=False, after_today=True
                     ),
@@ -65,28 +61,16 @@ async def seed_data():
                     "date_end": fake.date_this_year(
                         before_today=False, after_today=True
                     ),
-                }
+                    "price": 1000,
+                },
             )
-            await conn.execute(q)
-
-        q = sa.select(MemberType).where(MemberType.name == "Full membership")
-        full_membership = (await conn.execute(q)).scalar_one()
-
-        q = sa.select(Event).where(Event.name == "Event 1")
-        event_1 = (await conn.execute(q)).scalar_one()
-
-        for _ in range(100):
-            q = sa.insert(User).values(
-                {
-                    "name": fake.name(),
-                    "email": fake.email(),
-                    "birthday": fake.date_of_birth(),
-                    "hashed_password": get_password_hash("password"),
-                }
-            )
-            await conn.execute(q)
-        for x in range(1, 80):
-            q = sa.insert(Member).values(
+        # create 40 memberships to full membership
+        full_membership = await crud.member_type.get(
+            db, models.MemberType.name == "Full membership"
+        )
+        for x in range(1, 41):
+            await crud.member.create(
+                db,
                 {
                     "user_id": x,
                     "product_id": full_membership.id,
@@ -96,37 +80,59 @@ async def seed_data():
                     "date_end": fake.date_this_year(
                         before_today=False, after_today=True
                     ),
-                }
+                },
             )
-            await conn.execute(q)
-
-        q = sa.insert(Member).values(
-            {
-                "user_id": 1,
-                "product_id": event_1.id,
-                "date_start": fake.date_this_year(before_today=True, after_today=False),
-                "date_end": fake.date_this_year(before_today=False, after_today=True),
-            }
+        # create 10 memberships to morning membership
+        morning_membership = await crud.member_type.get(
+            db, models.MemberType.name == "Morning membership"
         )
-        await conn.execute(q)
-
-        for x in range(5):
-            q = sa.insert(Slot).values(
+        for x in range(41, 52):
+            await crud.member.create(
+                db,
+                {
+                    "user_id": x,
+                    "product_id": morning_membership.id,
+                    "date_start": fake.date_this_year(
+                        before_today=True, after_today=False
+                    ),
+                    "date_end": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                },
+            )
+        # create 10 memberships to event 1
+        event_1 = await crud.event.get(db, models.Event.name == "Event 1")
+        for x in range(1, 11):
+            await crud.member.create(
+                db,
+                {
+                    "user_id": x,
+                    "product_id": event_1.id,
+                    "date_start": fake.date_this_year(
+                        before_today=True, after_today=False
+                    ),
+                    "date_end": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                },
+            )
+        # create 5 slots for full_membership
+        for _ in range(1, 6):
+            await crud.slot.create(
+                db,
                 {
                     "product_id": full_membership.id,
-                    "reserved_until": datetime.datetime.utcnow(),
-                }
+                    "reserved_until": datetime.datetime.utcnow()
+                    + datetime.timedelta(days=7),
+                    "key": uuid.uuid4().hex,
+                },
             )
-            await conn.execute(q)
 
-        q = sa.insert(LockTable).values({"name": "crontest"})
-        await conn.execute(q)
+        # make locktable entries
+        for x in ["cron_generate_slots"]:
+            await crud.lock_table.create(db, {"name": x})
 
-        q = sa.select(User).where(User.id == 1)
-
-        print((await conn.execute(q)).scalar_one())
-
-        await conn.commit()
+        await db.commit()
 
 
 async def init_models():
@@ -138,21 +144,11 @@ async def init_models():
 
 async def test():
     async with deps.get_db_context() as db:
-        user = await crud.user.get(
-            db,
-            models.User.id == 1,
-            options=[
-                sa.orm.selectinload(
-                    models.User.member.and_(models.Member.active == True)
-                ).selectinload(
-                    models.Member.product.and_(models.Product.active == True)
-                )
-            ],
+        slot = await crud.slot.get(
+            db, Slot.key == "ceb7c46a-9dcf-4a35-80ab-635eba9d114c", Slot.user_id == 122
         )
-        print(user)
-        for member in user.member:
-            print(member)
-            print(member.product)
+        print(slot)
+        exit()
 
 
 if __name__ == "__main__":

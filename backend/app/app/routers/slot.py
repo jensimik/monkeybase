@@ -1,8 +1,11 @@
 import datetime
 from typing import Any, List
 
+from uuid import UUID
+
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Security, status
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
@@ -12,21 +15,23 @@ from ..utils.models_utils import StripeStatusEnum
 router = APIRouter()
 
 
-@router.post("/{slot_id}/create_payment_intent", response_model=dict)
+@router.post("/{slot_key}/create_payment_intent", response_model=dict)
 async def slot_create_payment_intent(
-    slot_id: int,
+    slot_key: str,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
+
     if slot := await crud.slot.get(
         db,
         models.Slot.user_id == user.id,
-        models.Slot.id == slot_id,
+        models.Slot.key == slot_key,
         options=[
             sa.orm.selectinload(models.Slot.product.and_(models.Product.active == True))
         ],
         for_update=True,
     ):
+        logger.info(f"found slot {slot}")
         # ensure customer is created in stripe and update if already
         if not user.stripe_customer_id:
             stripe_customer_id = stripe.create_customer(
@@ -53,6 +58,7 @@ async def slot_create_payment_intent(
                     detail="you have already paid this",
                 )
             # else continue if FAILED and allow create a new one and retry
+        logger.info(f"product price is {slot.product.price}")
         payment_intent = stripe.create_payment_intent(
             stripe_customer_id=user.stripe_customer_id,
             amount=slot.product.price,
@@ -69,5 +75,7 @@ async def slot_create_payment_intent(
         )
         await db.commit()
         return {"client_secret": payment_intent.client_secret}
+    else:
+        logger.info("not found :-/")
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

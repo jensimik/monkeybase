@@ -31,7 +31,7 @@ class SlotInDBBase(SlotBase):
     reserved_until: datetime
     user_id: Optional[int] = None
     product_id: int
-    key: UUID
+    key: str
     active: bool
     created_at: datetime
     updated_at: datetime
