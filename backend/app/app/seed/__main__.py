@@ -28,7 +28,7 @@ async def seed_data():
                     "birthday": fake.date_of_birth(),
                     "hashed_password": password_hash,
                     "scopes": "basic",
-                    "door_id": "some-door-id",
+                    "door_id": f"some-door-id{x}",
                 },
             )
         # create 2 member_types
@@ -68,12 +68,30 @@ async def seed_data():
         full_membership = await crud.member_type.get(
             db, models.MemberType.name == "Full membership"
         )
-        for x in range(1, 81):
+        for x in range(1, 41):
             await crud.member.create(
                 db,
                 {
                     "user_id": x,
                     "product_id": full_membership.id,
+                    "date_start": fake.date_this_year(
+                        before_today=True, after_today=False
+                    ),
+                    "date_end": fake.date_this_year(
+                        before_today=False, after_today=True
+                    ),
+                },
+            )
+        # create 10 memberships to morning membership
+        morning_membership = await crud.member_type.get(
+            db, models.MemberType.name == "Morning membership"
+        )
+        for x in range(41, 52):
+            await crud.member.create(
+                db,
+                {
+                    "user_id": x,
+                    "product_id": morning_membership.id,
                     "date_start": fake.date_this_year(
                         before_today=True, after_today=False
                     ),
