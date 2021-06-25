@@ -21,7 +21,7 @@ sendgrid==6.7.1
 aiohttp[speedups]==3.7.4.post0
 
 # misc
-croniter==1.0.13
+croniter==1.0.15
 tenacity==7.0.0
 looms==1.2
 python-dateutil==2.8.1
