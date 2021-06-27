@@ -1,13 +1,13 @@
 import datetime
 
 import pytest
-from app import models
+from backend.app import models
 from faker import Faker
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 
-from ..db.base import engine
+from backend.app.db.base import engine
 from pytest_pgsql.time import SQLAlchemyFreezegun
 
 

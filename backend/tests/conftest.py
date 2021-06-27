@@ -9,11 +9,11 @@ from pytest_pgsql.time import SQLAlchemyFreezegun
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app import models
-from app.core.config import settings
-from app.core.security import get_password_hash
-from app.main import app
-from app.utils.models_utils import StripeStatusEnum
+from backend.app import models
+from backend.app.core.config import settings
+from backend.app.core.security import get_password_hash
+from backend.app.main import app
+from backend.app.utils.models_utils import StripeStatusEnum
 
 fake = Faker()
 

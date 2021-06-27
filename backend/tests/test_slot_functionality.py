@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from pytest_pgsql.time import SQLAlchemyFreezegun
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .. import crud, models
-from ..db.base import engine
+from backend.app import crud, models
+from backend.app.db.base import engine
 
 
 @pytest.mark.vcr()

@@ -9,8 +9,8 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from stripe.webhook import WebhookSignature
 
-from .. import models
-from ..core.config import settings
+from backend.app import models
+from backend.app.core.config import settings
 
 PAYMENT_INTENT_CREATED = {
     "id": "evt_1J0A2uB3jLVglL0odkBjie9i",
@@ -100,7 +100,7 @@ def _webhook_post(client: TestClient, payload: dict, make_invalid=False):
     return client.post("/stripe-webhook", headers=headers, data=data)
 
 
-@mock.patch("app.core.utils._sendgrid_send")
+@mock.patch("backend.app.core.utils._sendgrid_send")
 def test_webhook_payment_intent_succeeded(
     mock_mail_send,
     client: TestClient,

@@ -1,7 +1,7 @@
 import datetime
 
 import pytest
-from app import models
+from backend.app import models
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
 from fastapi import status

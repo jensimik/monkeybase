@@ -9,5 +9,5 @@ COPY requirements.txt requirements.txt
 
 RUN pip install -r requirements.txt
 
-COPY ./app /app
-ENV PYTHONPATH=/app
+COPY ./backend /backend
+ENV PYTHONPATH=/backend

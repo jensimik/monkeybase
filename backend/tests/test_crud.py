@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from .. import crud, models
+from backend.app import crud, models
 
 
 @pytest.mark.parametrize(

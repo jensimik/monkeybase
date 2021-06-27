@@ -2,9 +2,9 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from jose import jwt
 
-from .. import models
-from ..core.config import settings
-from ..core.security import (
+from backend.app import models
+from backend.app.core.config import settings
+from backend.app.core.security import (
     ALGORITHM,
     generate_password_reset_token,
     get_password_hash,

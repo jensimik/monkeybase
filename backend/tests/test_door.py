@@ -1,8 +1,8 @@
 from fastapi import status
 from fastapi.testclient import TestClient
 
-from .. import crud, models
-from ..core.config import settings
+from backend.app import crud, models
+from backend.app.core.config import settings
 
 
 def test_door_access(client: TestClient):
