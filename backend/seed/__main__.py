@@ -5,12 +5,20 @@ import random
 import uuid
 import datetime
 from loguru import logger
-from ..db.base import Base, engine
-from ..models import User, MemberType, Event, Member, Webauthn, Slot, LockTable
-from .. import crud, deps, models
-from ..core.security import get_password_hash
+from backend.app.db.base import Base, engine
+from backend.app.models import (
+    User,
+    MemberType,
+    Event,
+    Member,
+    Webauthn,
+    Slot,
+    LockTable,
+)
+from backend.app import crud, deps, models
+from backend.app.core.security import get_password_hash
 from faker import Faker
-from ..utils.models_utils import DoorAccessEnum
+from backend.app.utils.models_utils import DoorAccessEnum
 
 
 async def seed_data():

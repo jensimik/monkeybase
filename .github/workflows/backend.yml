@@ -60,8 +60,8 @@ jobs:
       working-directory: backend
     - name: seed data
       run: |
-        python -m app.seed
-      working-directory: backend/backend
+        python -m seed
+      working-directory: backend
     - name: Test with pytest
       run: |
         pytest --cov-fail-under=60 --cov-report=xml:backend-coverage.xml --cov=backend/backend
