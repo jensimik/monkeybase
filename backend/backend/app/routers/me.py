@@ -65,9 +65,8 @@ async def member_list(
         db,
         models.Member.user_id == user_id,
         options=[
+            sa.orm.selectinload(models.Member.user.and_(models.User.active == True)),
             sa.orm.selectinload(
-                models.Member.user.and_(models.User.active == True)
-            ).sa.orm.selectinload(
                 models.Member.product.and_(models.Product.active == True)
             ),
         ],

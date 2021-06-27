@@ -24,3 +24,8 @@ def test_update_me(auth_client_basic: TestClient, fake_name):
     user_refresh = response.json()
 
     assert user_refresh["name"] == fake_name
+
+
+def test_me_get_members(auth_client_basic: TestClient):
+    response = auth_client_basic.get("/me/members")
+    assert response.status_code == 200
