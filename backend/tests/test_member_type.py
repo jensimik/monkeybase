@@ -19,6 +19,18 @@ def test_get_member_types(client: TestClient):
     assert len(data["items"]) >= 2
 
 
+def test_get_members_of_member_type(auth_client_admin: TestClient, member_type_id=1):
+    response = auth_client_admin.get(f"/member_types/{member_type_id}/members")
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["has_next"] is False
+    assert data["next"] == ""
+
+    assert len(data["items"]) >= 2
+
+
 def test_get_member_type(client: TestClient, member_type_id=1):
     response = client.get(f"/member_types/{member_type_id}")
     assert response.status_code == status.HTTP_200_OK
@@ -26,6 +38,10 @@ def test_get_member_type(client: TestClient, member_type_id=1):
     data = response.json()
 
     assert data["id"] == member_type_id
+
+    # non existing id
+    response = client.get("/member_type/999999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_create_member_type(auth_client_admin: TestClient):
@@ -40,18 +56,16 @@ def test_create_member_type(auth_client_admin: TestClient):
     test_get_member_type(client=auth_client_admin, member_type_id=data["id"])
 
 
-def test_patch_member_type(auth_client_admin: TestClient):
-    response = auth_client_admin.patch("/member_types/1", json={"name": "new name"})
+def test_patch_member_type(auth_client_admin: TestClient, fake_name: str):
+    response = auth_client_admin.patch("/member_types/1", json={"name": fake_name})
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
 
-    assert data["name"] == "new name"
+    assert data["name"] == fake_name
 
     # unknown id
-    response = auth_client_admin.patch(
-        "/member_types/999999", json={"name": "new name"}
-    )
+    response = auth_client_admin.patch("/member_types/999999", json={"name": fake_name})
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
