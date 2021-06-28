@@ -3,9 +3,9 @@ from typing import Any, Optional
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Security, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 
 router = APIRouter()
 

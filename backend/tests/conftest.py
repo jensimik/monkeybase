@@ -3,17 +3,16 @@ import uuid
 
 import pytest
 import sqlalchemy as sa
-from faker import Faker
-from fastapi.testclient import TestClient
-from pytest_pgsql.time import SQLAlchemyFreezegun
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
 from backend.app import models
 from backend.app.core.config import settings
 from backend.app.core.security import get_password_hash
 from backend.app.main import app
 from backend.app.utils.models_utils import StripeStatusEnum
+from faker import Faker
+from fastapi.testclient import TestClient
+from pytest_pgsql.time import SQLAlchemyFreezegun
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 fake = Faker()
 

@@ -5,7 +5,6 @@ import sqlalchemy as sa
 from fastapi import status
 from fastapi.testclient import TestClient
 from pytest_pgsql.time import SQLAlchemyFreezegun
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app import crud, models
 from backend.app.db.base import engine

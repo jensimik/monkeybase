@@ -4,12 +4,12 @@ from typing import Any, List
 
 import looms
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, Response, Security, status, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.security import get_password_hash
+from ..db import AsyncSession
 
 router = APIRouter()
 

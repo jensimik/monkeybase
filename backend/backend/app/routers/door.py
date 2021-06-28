@@ -5,11 +5,11 @@ import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.config import settings
 from ..core.utils import tz_now
+from ..db import AsyncSession
 from ..utils.models_utils import DoorAccessEnum
 
 router = APIRouter()

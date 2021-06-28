@@ -1,6 +1,6 @@
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..db import AsyncSession
 from ..models import User
 from ..schemas import UserCreate, UserUpdate
 from .base import CRUDBase
