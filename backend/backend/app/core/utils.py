@@ -21,6 +21,7 @@ class MailTemplateEnum(str, Enum):
 
     PASSWORD_RESET: str = "d-d53c66a7bcb54b2ca17ccd7f6b1be47d"
     WELCOME: str = "a-d53c66a7bcb54b2ca17ccd7f6b1be47d"
+    CONFIRM_SIGNUP: str = "aaaaasdfasdfasdfasfdconfirmsignup"
     PAYMENT_FAILED: str = "pf1"
     PAYMENT_SUCCEEDED: str = "ps1"
 

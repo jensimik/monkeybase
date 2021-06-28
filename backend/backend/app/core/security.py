@@ -64,6 +64,28 @@ def verify_password_reset_token(token: str) -> Optional[str]:
         return None
 
 
+def generate_signup_confirm_token(email: str) -> str:
+    delta = timedelta(days=14)
+    now = datetime.utcnow()
+    exp = now + delta
+    encoded_jwt = jwt.encode(
+        {"exp": exp, "nbf": now, "aud": "signup_confirm", "sub": email},
+        settings.SECRET_KEY,
+        algorithm="HS256",
+    )
+    return encoded_jwt
+
+
+def verify_signup_confirm_token(token: str) -> Optional[str]:
+    try:
+        decoded_token = jwt.decode(
+            token, settings.SECRET_KEY, audience="signup_confirm", algorithms=["HS256"]
+        )
+        return decoded_token["sub"]
+    except jwt.JWTError:
+        return None
+
+
 def generate_webauthn_state_token(state: dict, user: models.User) -> str:
     _state = state.copy()
     now = datetime.utcnow()
