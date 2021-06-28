@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Security, statu
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 
 router = APIRouter()
 

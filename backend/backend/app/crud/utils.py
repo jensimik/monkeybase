@@ -6,7 +6,8 @@ from loguru import logger
 from sqlakeyset.columns import find_order_key, parse_ob_clause
 from sqlakeyset.paging import Page, Paging, process_args, where_condition_for_page
 from sqlakeyset.sqla import group_by_clauses
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..db import AsyncSession
 
 
 async def perform_paging(q, per_page, place, backwards, orm=True, s=None):

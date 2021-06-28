@@ -2,10 +2,10 @@ import datetime
 from typing import Any, Union
 
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Security, Response, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 
 router = APIRouter()
 

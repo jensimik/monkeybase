@@ -4,11 +4,10 @@ import sqlalchemy as sa
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.dialects import postgresql as sa_pg
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.util import with_polymorphic
 
 from .. import models, schemas
-from ..db import Base
+from ..db import AsyncSession, Base
 from .utils import select_page
 
 ModelType = TypeVar("ModelType", bound=Base)

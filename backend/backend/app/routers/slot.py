@@ -1,15 +1,14 @@
 import datetime
 from typing import Any, List
-
 from uuid import UUID
 
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, HTTPException, Security, status
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
-from ..core import stripe
+from ..db import AsyncSession
+from ..utils import stripe
 from ..utils.models_utils import StripeStatusEnum
 
 router = APIRouter()
@@ -31,7 +30,6 @@ async def slot_create_payment_intent(
         ],
         for_update=True,
     ):
-        logger.info(f"found slot {slot}")
         # ensure customer is created in stripe and update if already
         if not user.stripe_customer_id:
             stripe_customer_id = stripe.create_customer(
@@ -58,7 +56,6 @@ async def slot_create_payment_intent(
                     detail="you have already paid this",
                 )
             # else continue if FAILED and allow create a new one and retry
-        logger.info(f"product price is {slot.product.price}")
         payment_intent = stripe.create_payment_intent(
             stripe_customer_id=user.stripe_customer_id,
             amount=slot.product.price,

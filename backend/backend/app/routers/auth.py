@@ -5,32 +5,32 @@ import fido2
 import sqlalchemy as sa
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Body,
     Depends,
     HTTPException,
     Path,
     Request,
     Response,
-    BackgroundTasks,
     security,
     status,
 )
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.security import (
     create_access_token,
     fido2server,
-    get_password_hash,
-    verify_password,
-    webauthn_state,
     generate_password_reset_token,
     generate_webauthn_state_token,
+    get_password_hash,
+    verify_password,
     verify_password_reset_token,
     verify_webauthn_staten_token,
+    webauthn_state,
 )
-from ..core.utils import send_transactional_email, MailTemplateEnum
+from ..core.utils import MailTemplateEnum, send_transactional_email
+from ..db import AsyncSession
 
 router = APIRouter()
 

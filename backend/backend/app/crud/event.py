@@ -1,9 +1,11 @@
+from typing import Any, Dict, List, Optional, Union
+
 import sqlalchemy as sa
+
+from ..db import AsyncSession
 from ..models import Event
 from ..schemas import EventCreate, EventUpdate
 from .base import CRUDBase
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Union, Dict, List, Any, Optional
 
 
 class CRUDEvent(CRUDBase[Event, EventCreate, EventUpdate]):

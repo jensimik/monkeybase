@@ -1,13 +1,12 @@
 import datetime
 
-import stripe
 from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, BackgroundTasks, Depends, status
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models
 from ..core.utils import MailTemplateEnum, send_transactional_email
+from ..db import AsyncSession
 from ..utils.models_utils import StripeStatusEnum
 
 router = APIRouter()

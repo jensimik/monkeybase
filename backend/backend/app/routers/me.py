@@ -3,9 +3,9 @@ from typing import Any
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Security
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 from .user import _delete_user
 
 router = APIRouter()
