@@ -1,13 +1,14 @@
 import datetime
+from unittest import mock
 
 import pytest
-from backend.app import models
+from backend.app import models, crud
+from backend.app.db.base import engine, AsyncSession
+from backend.app.core.security import generate_signup_confirm_token
 from faker import Faker
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.testclient import TestClient
-
-from backend.app.db.base import engine
 from pytest_pgsql.time import SQLAlchemyFreezegun
 
 
@@ -116,7 +117,8 @@ def test_identicon(client: TestClient):
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_signup(client: TestClient):
+@mock.patch("backend.app.core.utils._sendgrid_send")
+def test_signup(mock_mail_send, client: TestClient):
     faker = Faker()
     new_user_dict = {
         "name": faker.name(),
@@ -131,6 +133,23 @@ def test_signup(client: TestClient):
 
     for x in ["name", "email", "birthday"]:
         assert data[x] == str(new_user_dict[x])
+
+    assert mock_mail_send.called
+
+    # test login this new user (denied because email not confirmed yet)
+    response = client.post(
+        "/auth/token",
+        data={
+            "username": new_user_dict["email"],
+            "password": new_user_dict["password"],
+        },
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # confirm the email
+    confirm_token = generate_signup_confirm_token(email=new_user_dict["email"])
+    response = client.post(f"/auth/confirm_email/{confirm_token}")
+    assert response.status_code == status.HTTP_200_OK
 
     # test login this new user
     response = client.post(

@@ -4,11 +4,21 @@ from typing import Any, List
 
 import looms
 import sqlalchemy as sa
-from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Response,
+    Security,
+    status,
+)
 from loguru import logger
+from looms.looms import generate
 
 from .. import crud, deps, models, schemas
-from ..core.security import get_password_hash
+from ..core.security import generate_signup_confirm_token, get_password_hash
+from ..core.utils import MailTemplateEnum, send_transactional_email
 from ..db import AsyncSession
 
 router = APIRouter()
@@ -103,6 +113,9 @@ async def create_user(
     obj_in = create.dict(exclude_unset=True)
     password = obj_in.pop("password")
     obj_in["hashed_password"] = get_password_hash(password)
+    obj_in[
+        "email_confirmed"
+    ] = True  # always confirmed email when admin manually create a user?
     user = await crud.user.create(db, obj_in=obj_in)
     await db.commit()
     return user
@@ -115,6 +128,7 @@ async def create_user(
 )
 async def signup_user(
     create: schemas.UserCreate,
+    bgtask: BackgroundTasks,
     db: AsyncSession = Depends(deps.get_db),
 ) -> Any:
     obj_in = create.dict(exclude_unset=True)
@@ -122,6 +136,16 @@ async def signup_user(
     obj_in["hashed_password"] = get_password_hash(password)
     user = await crud.user.create(db, obj_in=obj_in)
     await db.commit()
+    # send email to confirm the email
+    bgtask.add_task(
+        send_transactional_email,
+        to_email=user.email,
+        template_id=MailTemplateEnum.CONFIRM_SIGNUP,
+        data={
+            "name": user.name,
+            "confirm_token": generate_signup_confirm_token(user.email),
+        },
+    )
     return user
 
 

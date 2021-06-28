@@ -69,6 +69,7 @@ def user_basic(db: sa.orm.Session):
             "email": email,
             "birthday": fake.date_of_birth(),
             "hashed_password": get_password_hash("basic"),
+            "email_confirmed": True,
             "scopes": "basic",
         }
     )
@@ -91,6 +92,7 @@ def user_admin(db: sa.orm.Session):
                 "email": email,
                 "birthday": fake.date_of_birth(),
                 "hashed_password": get_password_hash("admin"),
+                "email_confirmed": True,
                 "scopes": "basic,admin",
             }
         )
