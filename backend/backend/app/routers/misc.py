@@ -6,7 +6,7 @@ from dateutil.rrule import DAILY, rrule
 from fastapi import APIRouter, Depends, status
 
 from .. import deps
-from ..core.custom_swagger import get_swagger_ui_html
+from ..utils.custom_swagger import get_swagger_ui_html
 from ..core.utils import tz_today
 
 router = APIRouter()

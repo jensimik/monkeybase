@@ -1,9 +1,11 @@
+from typing import Any, Dict, List, Optional, Union
+
 import sqlalchemy as sa
-from ..models import Product, MemberType, Event
+
+from ..db import AsyncSession
+from ..models import Event, MemberType, Product
 from ..schemas import ProductCreate, ProductUpdate
 from .base import CRUDBase
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Union, Dict, List, Any, Optional
 
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):

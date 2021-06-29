@@ -35,6 +35,7 @@ async def seed_data():
                     "email": f"test{x}@test.dk",
                     "birthday": fake.date_of_birth(),
                     "hashed_password": password_hash,
+                    "email_confirmed": True,
                     "scopes": "basic",
                     "door_id": f"some-door-id{x}",
                 },

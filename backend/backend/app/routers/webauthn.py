@@ -14,11 +14,11 @@ from fastapi import (
     security,
     status,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
 from ..core.config import settings
 from ..core.security import generate_webauthn_state_token, verify_webauthn_staten_token
+from ..db import AsyncSession
 
 rp = fido2.webauthn.PublicKeyCredentialRpEntity(
     settings.WEBAUTHN_RP_ID, settings.WEBAUTHN_RP_NAME

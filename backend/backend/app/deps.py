@@ -8,12 +8,11 @@ from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from fastapi.security.api_key import APIKeyHeader
 from jose import jwt
 from pydantic import ValidationError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import crud, models, schemas
 from .core import security
 from .core.config import settings
-from .db.base import async_session
+from .db import async_session, AsyncSession
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",

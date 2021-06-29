@@ -1,6 +1,6 @@
 import stripe
 
-from .config import settings
+from ..core.config import settings
 
 stripe.api_key = settings.STRIPE_API_KEY
 

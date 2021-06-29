@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Security, statu
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 
 router = APIRouter()
 
@@ -248,5 +248,5 @@ async def member_list(
         ],
         per_page=paging.per_page,
         page=paging.page,
-        order_by=[models.User.name.asc(), models.Member.id.asc()],
+        order_by=[models.Member.id.asc()],
     )

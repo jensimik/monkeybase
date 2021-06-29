@@ -124,5 +124,12 @@ def test_webhook_payment_intent_succeeded(
     user = response.json()
     assert user["member"][0]["product"]["id"] == 1
 
+
+def test_webhook_invalid(
+    client: TestClient,
+    auth_client_basic: TestClient,
+    slot_with_stripe_id: models.Slot,
+):
+    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED, make_invalid=True)
     assert response.status_code == status.HTTP_400_BAD_REQUEST

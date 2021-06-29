@@ -3,9 +3,9 @@ from typing import Any
 import sqlalchemy as sa
 from fastapi import APIRouter, Depends, Security
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .. import crud, deps, models, schemas
+from ..db import AsyncSession
 from .user import _delete_user
 
 router = APIRouter()
@@ -65,9 +65,8 @@ async def member_list(
         db,
         models.Member.user_id == user_id,
         options=[
+            sa.orm.selectinload(models.Member.user.and_(models.User.active == True)),
             sa.orm.selectinload(
-                models.Member.user.and_(models.User.active == True)
-            ).sa.orm.selectinload(
                 models.Member.product.and_(models.Product.active == True)
             ),
         ],
