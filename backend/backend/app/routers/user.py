@@ -2,7 +2,6 @@ import io
 from os import stat
 from typing import Any, List
 
-import looms
 import sqlalchemy as sa
 from fastapi import (
     APIRouter,
@@ -14,11 +13,10 @@ from fastapi import (
     status,
 )
 from loguru import logger
-from looms.looms import generate
 
 from .. import crud, deps, models, schemas
 from ..core.security import generate_signup_confirm_token, get_password_hash
-from ..core.utils import MailTemplateEnum, send_transactional_email
+from ..core.utils import MailTemplateEnum, send_transactional_email, looms
 from ..db import AsyncSession
 
 router = APIRouter()
@@ -195,7 +193,7 @@ async def read_user_by_id_identicon(
     """
     user = await crud.user.get(db, models.User.id == user_id)
 
-    img = looms.generate(user.email)
+    img = looms.generate_identicon(user.email)
     img = img.quantize(method=2)
 
     with io.BytesIO() as bi:
