@@ -16,8 +16,9 @@ from loguru import logger
 
 from .. import crud, deps, models, schemas
 from ..core.security import generate_signup_confirm_token, get_password_hash
-from ..core.utils import MailTemplateEnum, send_transactional_email, looms
+from ..core.utils import MailTemplateEnum, send_transactional_email
 from ..db import AsyncSession
+from ..utils.looms import generate_identicon
 
 router = APIRouter()
 
@@ -193,7 +194,7 @@ async def read_user_by_id_identicon(
     """
     user = await crud.user.get(db, models.User.id == user_id)
 
-    img = looms.generate_identicon(user.email)
+    img = generate_identicon(user.email)
     img = img.quantize(method=2)
 
     with io.BytesIO() as bi:
