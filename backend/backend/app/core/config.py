@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     STRIPE_API_KEY: str = None
     STRIPE_WEBHOOK_SECRET: str = None
 
+    BAMBORA_API_KEY: str = None
+    BAMBORA_MD5_KEY: str = None
+    BAMBORA_CALLBACK_URL: str = None
+    BAMBORA_ACCEPT_URL: str = None
+    BAMBORA_CANCEL_URL: str = None
+
     DOOR_API_KEY: str = "asdf1234"
 
     # @validator("SENTRY_DSN", pre=True)

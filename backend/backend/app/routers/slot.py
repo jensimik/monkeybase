@@ -8,19 +8,59 @@ from loguru import logger
 
 from .. import crud, deps, models, schemas
 from ..db import AsyncSession
-from ..utils import stripe
-from ..utils.models_utils import StripeStatusEnum
+from ..utils import stripe, bambora
+from ..utils.models_utils import PaymentStatusEnum
 
 router = APIRouter()
 
 
-@router.post("/{slot_key}/create_payment_intent", response_model=dict)
+@router.post("/{slot_key}/bambora-create-checkout-session", response_model=dict)
+async def slot_create_bambora_checkout_session(
+    slot_key: str,
+    user: models.User = Security(deps.get_current_user, scopes=["basic"]),
+    db: AsyncSession = Depends(deps.get_db),
+):
+    if slot := await crud.slot.get(
+        db,
+        models.Slot.user_id == user.id,
+        models.Slot.key == slot_key,
+        options=[
+            sa.orm.selectinload(models.Slot.product.and_(models.Product.active == True))
+        ],
+        for_update=True,
+    ):
+        if slot.payment_status == PaymentStatusEnum.PAID:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="you have already paid this",
+            )
+        # create a new checkout session - it will expire in one hour
+        token, url = await bambora.create_checkout_session(
+            slot_id=slot.id,
+            amount=slot.product.price,
+            email=user.email,
+            language=user.language,
+        )
+        await crud.slot.update(
+            db,
+            models.Slot.id == slot.id,
+            obj_in={
+                "bambora_token": token,
+                "payment_status": PaymentStatusEnum.PENDING,
+            },
+        )
+        await db.commit()
+        return {"url": url, "token": token}
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+
+@router.post("/{slot_key}/stripe-create-payment-intent", response_model=dict)
 async def slot_create_payment_intent(
     slot_key: str,
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
-
     if slot := await crud.slot.get(
         db,
         models.Slot.user_id == user.id,
@@ -48,9 +88,9 @@ async def slot_create_payment_intent(
             )
         # if a payment intent is already created for this slot - then return it
         if slot.stripe_id:
-            if slot.stripe_status == StripeStatusEnum.PENDING:
+            if slot.stripe_status == PaymentStatusEnum.PENDING:
                 return {"payment_intent_id": slot.stripe_id}
-            elif slot.stripe_status == StripeStatusEnum.PAID:
+            elif slot.stripe_status == PaymentStatusEnum.PAID:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="you have already paid this",
@@ -67,12 +107,10 @@ async def slot_create_payment_intent(
             models.Slot.id == slot.id,
             obj_in={
                 "stripe_id": payment_intent.id,
-                "stripe_status": StripeStatusEnum.PENDING,
+                "stripe_status": PaymentStatusEnum.PENDING,
             },
         )
         await db.commit()
         return {"client_secret": payment_intent.client_secret}
-    else:
-        logger.info("not found :-/")
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

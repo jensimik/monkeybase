@@ -7,7 +7,7 @@ from backend.app import models
 from backend.app.core.config import settings
 from backend.app.core.security import get_password_hash
 from backend.app.main import app
-from backend.app.utils.models_utils import StripeStatusEnum
+from backend.app.utils.models_utils import PaymentStatusEnum
 from faker import Faker
 from fastapi.testclient import TestClient
 from pytest_pgsql.time import SQLAlchemyFreezegun
@@ -115,7 +115,7 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
                 "user_id": user_basic.id,
                 "product_id": 1,
                 "key": uuid.uuid4().hex,
-                "stripe_status": StripeStatusEnum.PENDING,
+                "payment_status": PaymentStatusEnum.PENDING,
                 "reserved_until": datetime.datetime.utcnow()
                 + datetime.timedelta(hours=1),
             }

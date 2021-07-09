@@ -108,7 +108,7 @@ async def delete_memeber_type(
 
 
 @router.post(
-    "/{member_type_id}/reserve_a_slot",
+    "/{member_type_id}/reserve-a-slot",
     response_model=schemas.Slot,
     responses={429: {"model": schemas.WaitingList}},
 )
