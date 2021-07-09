@@ -88,9 +88,9 @@ async def slot_create_payment_intent(
             )
         # if a payment intent is already created for this slot - then return it
         if slot.stripe_id:
-            if slot.stripe_status == PaymentStatusEnum.PENDING:
+            if slot.payment_status == PaymentStatusEnum.PENDING:
                 return {"payment_intent_id": slot.stripe_id}
-            elif slot.stripe_status == PaymentStatusEnum.PAID:
+            elif slot.payment_status == PaymentStatusEnum.PAID:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="you have already paid this",
@@ -107,7 +107,7 @@ async def slot_create_payment_intent(
             models.Slot.id == slot.id,
             obj_in={
                 "stripe_id": payment_intent.id,
-                "stripe_status": PaymentStatusEnum.PENDING,
+                "payment_status": PaymentStatusEnum.PENDING,
             },
         )
         await db.commit()
