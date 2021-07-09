@@ -8,7 +8,7 @@ from loguru import logger
 from .. import crud, deps, models
 from ..core.utils import MailTemplateEnum, send_transactional_email
 from ..db import AsyncSession
-from ..utils.models_utils import StripeStatusEnum
+from ..utils.models_utils import PaymentStatusEnum
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def payment_fail(db, payment_intent):
         db,
         models.Slot.stripe_id == payment_intent.id,
         models.Slot.reserved_until > datetime.datetime.utcnow(),
-        models.Slot.stripe_status == StripeStatusEnum.PENDING,
+        models.Slot.payment_status == PaymentStatusEnum.PENDING,
         for_update=True,
     ):
         user = await crud.user.get(db, models.User.id == slot.user_id)
@@ -30,7 +30,7 @@ async def payment_fail(db, payment_intent):
         slot = await crud.slot.update(
             db,
             models.Slot.id == slot.id,
-            obj_in={"stripe_status": StripeStatusEnum.FAIL},
+            obj_in={"payment_status": PaymentStatusEnum.FAIL},
         )
         return user, slot, product
     logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
@@ -43,7 +43,7 @@ async def payment_succeeded(db, payment_intent):
         db,
         models.Slot.stripe_id == payment_intent.id,
         models.Slot.reserved_until > datetime.datetime.utcnow(),
-        models.Slot.stripe_status == StripeStatusEnum.PENDING,
+        models.Slot.payment_status == PaymentStatusEnum.PENDING,
         for_update=True,
     ):
         user = await crud.user.get(db, models.User.id == slot.user_id)
@@ -52,7 +52,7 @@ async def payment_succeeded(db, payment_intent):
             db,
             models.Slot.id == slot.id,
             obj_in={
-                "stripe_status": StripeStatusEnum.PAID,
+                "payment_status": PaymentStatusEnum.PAID,
                 "reserved_until": datetime.datetime.utcnow(),
             },
         )

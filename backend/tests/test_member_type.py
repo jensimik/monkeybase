@@ -93,7 +93,7 @@ def test_delete_member_type(auth_client_admin: TestClient):
 
 
 def test_reserve_a_slot(auth_client_basic: TestClient):
-    response = auth_client_basic.post("/member_types/1/reserve_a_slot")
+    response = auth_client_basic.post("/member_types/1/reserve-a-slot")
     assert response.status_code == status.HTTP_200_OK
 
 

@@ -7,7 +7,7 @@ from .core.config import settings
 from .db import Base
 from .utils.models_utils import (
     DoorAccessEnum,
-    StripeStatusEnum,
+    PaymentStatusEnum,
     TimestampableMixin,
     gen_uuid,
     utcnow,
@@ -121,10 +121,10 @@ class Slot(Base, TimestampableMixin):
     key = sa.Column(sa.String, nullable=False, index=True)
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
     stripe_id = sa.Column(sa.String)
-    stripe_status = sa.Column(
-        sa_pg.ENUM(StripeStatusEnum),
+    payment_status = sa.Column(
+        sa_pg.ENUM(PaymentStatusEnum),
         nullable=False,
-        default=StripeStatusEnum.NOT_AVAILABLE,
+        default=PaymentStatusEnum.NOT_AVAILABLE,
     )
     user_id = sa.Column(sa.Integer, sa.ForeignKey("user.id"), nullable=True)
     product_id = sa.Column(sa.Integer, sa.ForeignKey("product.id"))

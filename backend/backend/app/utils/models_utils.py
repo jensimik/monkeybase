@@ -44,7 +44,7 @@ class DoorAccessEnum(str, Enum):
 
 
 @unique
-class StripeStatusEnum(str, Enum):
+class PaymentStatusEnum(str, Enum):
 
     NOT_AVAILABLE: str = "NOT_AVAILABLE"
     PENDING: str = "PENDING"
