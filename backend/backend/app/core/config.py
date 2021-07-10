@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     STRIPE_API_KEY: str = None
     STRIPE_WEBHOOK_SECRET: str = None
 
+    NETS_EASY_SECRET_KEY: str = None
+    NETS_EASY_BASE_URL: str = None
+    NETS_EASY_WEBHOOK_SECRET: str = None
+
     DOOR_API_KEY: str = "asdf1234"
 
     # @validator("SENTRY_DSN", pre=True)

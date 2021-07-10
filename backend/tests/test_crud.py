@@ -139,6 +139,7 @@ async def test_count(async_db, scoped_crud, model, ids):
             {
                 "name": "n",
                 "email": "t@t.dk",
+                "mobile": "+4582828282",
                 "hashed_password": "h",
                 "birthday": datetime.datetime.utcnow(),
             },

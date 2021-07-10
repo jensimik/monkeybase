@@ -97,7 +97,7 @@ async def delete_event(
 
 
 @router.post(
-    "/{event_id}/reserve_a_slot",
+    "/{event_id}/reserve-a-slot",
     response_model=Union[schemas.WaitingList, schemas.Slot],
 )
 async def reserve_a_slot(

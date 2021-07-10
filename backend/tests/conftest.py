@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import random
 
 import pytest
 import sqlalchemy as sa
@@ -7,7 +8,7 @@ from backend.app import models
 from backend.app.core.config import settings
 from backend.app.core.security import get_password_hash
 from backend.app.main import app
-from backend.app.utils.models_utils import StripeStatusEnum
+from backend.app.utils.models_utils import PaymentStatusEnum
 from faker import Faker
 from fastapi.testclient import TestClient
 from pytest_pgsql.time import SQLAlchemyFreezegun
@@ -63,10 +64,12 @@ async def async_db(async_engine):
 @pytest.fixture(scope="session")
 def user_basic(db: sa.orm.Session):
     email = fake.email()
+    mobile = random.randint(4000, 999999)
     q = sa.insert(models.User).values(
         {
             "name": fake.name(),
             "email": email,
+            "mobile": f"+4542{mobile:06d}",
             "birthday": fake.date_of_birth(),
             "hashed_password": get_password_hash("basic"),
             "email_confirmed": True,
@@ -84,12 +87,14 @@ def user_basic(db: sa.orm.Session):
 @pytest.fixture(scope="session")
 def user_admin(db: sa.orm.Session):
     email = fake.email()
+    mobile = random.randint(4000, 999999)
     q = (
         sa.insert(models.User)
         .values(
             {
                 "name": fake.name(),
                 "email": email,
+                "mobile": f"+4542{mobile:06d}",
                 "birthday": fake.date_of_birth(),
                 "hashed_password": get_password_hash("admin"),
                 "email_confirmed": True,
@@ -111,11 +116,34 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
         sa.insert(models.Slot)
         .values(
             {
-                "stripe_id": fake.md5(),
+                "payment_id": fake.md5(),
                 "user_id": user_basic.id,
                 "product_id": 1,
                 "key": uuid.uuid4().hex,
-                "stripe_status": StripeStatusEnum.PENDING,
+                "payment_status": PaymentStatusEnum.PENDING,
+                "reserved_until": datetime.datetime.utcnow()
+                + datetime.timedelta(hours=1),
+            }
+        )
+        .returning(models.Slot)
+    )
+    q = sa.select(models.Slot).from_statement(q)
+    slot = db.execute(q).scalar_one()
+    db.commit()
+    yield slot
+
+
+@pytest.fixture(scope="session")
+def slot_with_nets_id(user_basic: models.User, db: sa.orm.Session):
+    q = (
+        sa.insert(models.Slot)
+        .values(
+            {
+                "payment_id": fake.md5(),
+                "user_id": user_basic.id,
+                "product_id": 2,
+                "key": uuid.uuid4().hex,
+                "payment_status": PaymentStatusEnum.PENDING,
                 "reserved_until": datetime.datetime.utcnow()
                 + datetime.timedelta(hours=1),
             }

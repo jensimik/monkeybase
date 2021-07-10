@@ -4,6 +4,8 @@ import string
 import time
 from unittest import mock
 
+from loguru import logger
+
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -97,7 +99,7 @@ def _webhook_post(client: TestClient, payload: dict, make_invalid=False):
             )
         signature = "".join(list_signature)
     headers = {"stripe-signature": f"t={timestamp},v1={signature}"}
-    return client.post("/stripe-webhook", headers=headers, data=data)
+    return client.post("/webhook/stripe", headers=headers, data=data)
 
 
 @mock.patch("backend.app.core.utils._sendgrid_send")
@@ -114,7 +116,7 @@ def test_webhook_payment_intent_succeeded(
     # response = _webhook_post(client, PAYMENT_INTENT_FAILED)
     # assert response.status_code == status.HTTP_200_OK
 
-    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
+    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.payment_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED)
     assert response.status_code == status.HTTP_200_OK
     assert mock_mail_send.called
@@ -130,6 +132,76 @@ def test_webhook_invalid(
     auth_client_basic: TestClient,
     slot_with_stripe_id: models.Slot,
 ):
-    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
+    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.payment_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED, make_invalid=True)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+NETS_EVENT_COMPLETED = {
+    "id": "36ce3ff4a896450ea2b70f3263554772",
+    "merchantId": 100017120,
+    "timestamp": "2021-05-04T22:09:08.4342+02:00",
+    "event": "payment.checkout.completed",
+    "data": {
+        "order": {
+            "amount": {"amount": 5500, "currency": "SEK"},
+            "reference": "Hosted Demo Order",
+            "orderItems": [
+                {
+                    "reference": "Sneaky NE2816-82",
+                    "name": "Sneaky",
+                    "quantity": 2,
+                    "unit": "pcs",
+                    "unitPrice": 2500,
+                    "taxRate": 1000,
+                    "taxAmount": 500,
+                    "netTotalAmount": 5000,
+                    "grossTotalAmount": 5500,
+                }
+            ],
+        },
+        "consumer": {
+            "firstName": "John",
+            "lastName": "Doe",
+            "billingAddress": {
+                "addressLine1": "Solgatan 4",
+                "addressLine2": "",
+                "city": "STOCKHOLM",
+                "country": "SWE",
+                "postcode": "11522",
+                "receiverLine": "John doe",
+            },
+            "country": "SWE",
+            "email": "john.doe@example.com",
+            "ip": "192.230.114.3",
+            "phoneNumber": {"prefix": "+46", "number": "12345678"},
+            "shippingAddress": {
+                "addressLine1": "Solgatan 4",
+                "addressLine2": "",
+                "city": "STOCKHOLM",
+                "country": "SWE",
+                "postcode": "11522",
+                "receiverLine": "John Doe",
+            },
+        },
+        "paymentId": "02a900006091a9a96937598058c4e474",
+    },
+}
+
+
+@mock.patch("backend.app.core.utils._sendgrid_send")
+def test_nets_webhook_success(
+    mock_mail_send,
+    client: TestClient,
+    slot_with_nets_id: models.Slot,
+):
+    NETS_EVENT_COMPLETED["data"]["paymentId"] = slot_with_nets_id.payment_id
+
+    headers = {"Authorization": f"Bearer {settings.NETS_EASY_WEBHOOK_SECRET}"}
+    response = client.post(
+        "/webhook/netseasy", headers=headers, json=NETS_EVENT_COMPLETED
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    assert mock_mail_send.called

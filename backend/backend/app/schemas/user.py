@@ -10,6 +10,7 @@ PASSWORD = constr(min_length=4, max_length=50)
 # Shared properties
 class UserBase(BaseModel):
     email: Optional[EmailStr] = None
+    mobile: Optional[str] = None
     name: Optional[NAME] = None
     birthday: Optional[date] = None
 
@@ -17,6 +18,7 @@ class UserBase(BaseModel):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     email: EmailStr
+    mobile: str
     password: PASSWORD
     birthday: date
 
@@ -24,11 +26,13 @@ class UserCreate(UserBase):
 # Properties to receive via API on update
 class UserUpdate(UserBase):
     enabled_2fa: Optional[bool] = None
+    mobile: Optional[str] = None
     password: Optional[PASSWORD] = None
 
 
 class UserUpdateMe(BaseModel):
     email: Optional[EmailStr] = None
+    mobile: Optional[str] = None
     name: Optional[NAME] = None
     birthday: Optional[date] = None
     enabled_2fa: Optional[bool] = None

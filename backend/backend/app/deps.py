@@ -6,13 +6,14 @@ import stripe
 from fastapi import Depends, Header, HTTPException, Query, Request, Security, status
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from fastapi.security.api_key import APIKeyHeader
+from fastapi.security.http import HTTPBearer
 from jose import jwt
 from pydantic import ValidationError
 
 from . import crud, models, schemas
 from .core import security
 from .core.config import settings
-from .db import async_session, AsyncSession
+from .db import AsyncSession, async_session
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
@@ -22,6 +23,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
     },
 )
 stripe_signature_header = APIKeyHeader(name="stripe-signature", auto_error=True)
+netseasy_header = HTTPBearer()
 
 
 @asynccontextmanager
@@ -38,6 +40,12 @@ async def get_db() -> AsyncIterator[AsyncSession]:
 async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
     async with aiohttp.ClientSession() as session:
         yield session
+
+
+async def neteasy_auth(api_key: str = Security(netseasy_header)) -> str:
+    if api_key.credentials == settings.NETS_EASY_WEBHOOK_SECRET:
+        return True
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
 
 async def get_stripe_webhook_event(

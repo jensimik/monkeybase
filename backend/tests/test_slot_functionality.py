@@ -14,12 +14,12 @@ from backend.app.db.base import engine
 def test_slots(auth_client_basic: TestClient):
 
     # no free slot in member_type 2 - return waiting list 429
-    response = auth_client_basic.post("/member_types/2/reserve_a_slot")
+    response = auth_client_basic.post("/member_types/2/reserve-a-slot")
 
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     # get the free slot in member_type 1
-    response = auth_client_basic.post("/member_types/1/reserve_a_slot")
+    response = auth_client_basic.post("/member_types/1/reserve-a-slot")
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -27,13 +27,30 @@ def test_slots(auth_client_basic: TestClient):
 
     slot_key = data["key"]
 
-    response = auth_client_basic.post(f"/slots/{slot_key}/create_payment_intent")
+    # do stripe testing
+
+    response = auth_client_basic.post(f"/slots/{slot_key}/create-payment-intent")
 
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
 
     assert "secret" in data["client_secret"]
+
+    # do nets easy testing
+
+    response = auth_client_basic.post(f"/slots/{slot_key}/create-payment-id")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert "payment_id" in data
+
+    # no slot found == 404
+    for url in ["/slots/asdf/create-payment-intent", "/slots/asdf/create-payment-id"]:
+        response = auth_client_basic.post(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_member(db, client, user_admin):
