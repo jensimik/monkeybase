@@ -16,6 +16,9 @@ env:
   SECRET_KEY: secret-key-for-testing
   STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
   STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+  NETS_EASY_SECRET_KEY: ${{ secrets.NETS_EASY_SECRET_KEY }}
+  NETS_EASY_WEBHOOK_SECRET: ${{ secrets.NETS_EASY_WEBHOOK_SECRET }}
+  NETS_EASY_BASE_URL: https://test.api.dibspayment.eu
 
 jobs:
   test:
