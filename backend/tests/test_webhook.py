@@ -114,7 +114,7 @@ def test_webhook_payment_intent_succeeded(
     # response = _webhook_post(client, PAYMENT_INTENT_FAILED)
     # assert response.status_code == status.HTTP_200_OK
 
-    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
+    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.payment_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED)
     assert response.status_code == status.HTTP_200_OK
     assert mock_mail_send.called
@@ -130,6 +130,6 @@ def test_webhook_invalid(
     auth_client_basic: TestClient,
     slot_with_stripe_id: models.Slot,
 ):
-    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.stripe_id
+    PAYMENT_INTENT_SUCCEEDED["data"]["object"]["id"] = slot_with_stripe_id.payment_id
     response = _webhook_post(client, PAYMENT_INTENT_SUCCEEDED, make_invalid=True)
     assert response.status_code == status.HTTP_400_BAD_REQUEST

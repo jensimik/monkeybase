@@ -64,7 +64,7 @@ class Member(TimestampableMixin, Base):
     active = sa.orm.column_property(date_end >= sa.func.now())
     user = sa.orm.relationship("User", back_populates="member", lazy="noload")
     product = sa.orm.relationship("Product", back_populates="member", lazy="noload")
-    stripe_id = sa.Column(sa.String, nullable=True)
+    payment_id = sa.Column(sa.String, nullable=True)
 
 
 class Product(TimestampableMixin, Base):
@@ -120,7 +120,7 @@ class Slot(Base, TimestampableMixin):
     active = sa.Column(sa.Boolean, default=True, nullable=False)
     key = sa.Column(sa.String, nullable=False, index=True)
     reserved_until = sa.Column(sa.DateTime, nullable=False, default=utcnow())
-    stripe_id = sa.Column(sa.String)
+    payment_id = sa.Column(sa.String)
     payment_status = sa.Column(
         sa_pg.ENUM(PaymentStatusEnum),
         nullable=False,

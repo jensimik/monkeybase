@@ -11,7 +11,7 @@ class MemberBase(BaseModel):
     member_type_id: Optional[int] = None
     date_start: Optional[date] = None
     date_end: Optional[date] = None
-    payment_id: Optional[int] = None
+    payment_id: Optional[str] = None
 
 
 class MemberCreateMe(BaseModel):
@@ -25,7 +25,7 @@ class MemberCreate(MemberBase):
     member_type_id: int
     date_start: date
     date_end: date
-    payment_id: int
+    payment_id: str
 
 
 # Properties to receive via API on update

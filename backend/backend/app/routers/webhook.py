@@ -1,11 +1,10 @@
 import datetime
-import stripe
 
+import stripe
 from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, BackgroundTasks, Depends, status
-from loguru import logger
 
-from .. import crud, deps, models
+from .. import crud, deps, models, schemas
 from ..core.utils import MailTemplateEnum, send_transactional_email
 from ..db import AsyncSession
 from ..utils.models_utils import PaymentStatusEnum
@@ -17,10 +16,10 @@ class SlotNotFound(Exception):
     pass
 
 
-async def payment_fail(db, payment_intent):
+async def payment_fail(db, payment_id, background_tasks):
     if slot := await crud.slot.get(
         db,
-        models.Slot.stripe_id == payment_intent.id,
+        models.Slot.payment_id == payment_id,
         models.Slot.reserved_until > datetime.datetime.utcnow(),
         models.Slot.payment_status == PaymentStatusEnum.PENDING,
         for_update=True,
@@ -32,16 +31,22 @@ async def payment_fail(db, payment_intent):
             models.Slot.id == slot.id,
             obj_in={"payment_status": PaymentStatusEnum.FAIL},
         )
-        return user, slot, product
-    logger.info(f"slot with payment_intent_id {payment_intent.id} not found")
-    raise SlotNotFound("slot not found?")
+        await db.commit()
+        background_tasks.add_task(
+            send_transactional_email,
+            to_email=user.email,
+            template_id=MailTemplateEnum.PAYMENT_FAILED,
+            data={"product_name": product.name},
+        )
+        return True
+
+    raise SlotNotFound()
 
 
-async def payment_succeeded(db, payment_intent):
-    # get the slot for this payment
+async def payment_succeeded(db, payment_id, background_tasks):
     if slot := await crud.slot.get(
         db,
-        models.Slot.stripe_id == payment_intent.id,
+        models.Slot.payment_id == payment_id,
         models.Slot.reserved_until > datetime.datetime.utcnow(),
         models.Slot.payment_status == PaymentStatusEnum.PENDING,
         for_update=True,
@@ -70,7 +75,7 @@ async def payment_succeeded(db, payment_intent):
                     obj_in={
                         "date_end": member_exist.date_end
                         + relativedelta(years=1, nlyearday=15),
-                        "stripe_id": slot.stripe_id,
+                        "payment_id": slot.payment_id,
                     },
                 )
             else:
@@ -78,7 +83,7 @@ async def payment_succeeded(db, payment_intent):
                 member = {
                     "user_id": slot.user_id,
                     "product_id": slot.product_id,
-                    "stripe_id": slot.stripe_id,
+                    "payment_id": slot.payment_id,
                     "date_start": datetime.date.today(),
                     "date_end": datetime.date.today()
                     + relativedelta(years=1, nlyearday=15),
@@ -90,13 +95,39 @@ async def payment_succeeded(db, payment_intent):
                 "product_id": slot.product_id,
                 "date_start": slot.product.date_start,
                 "date_end": slot.product.date_end,
-                "stripe_id": slot.stripe_id,
+                "payment_id": slot.payment_id,
             }
             await crud.member.create(db, obj_in=member)
 
-        return user, slot, product
+        await db.commit()
+        # send payment success email
+        background_tasks.add_task(
+            send_transactional_email,
+            to_email=user.email,
+            template_id=MailTemplateEnum.PAYMENT_SUCCEEDED,
+            data={"product_name": product.name, "price": product.price},
+        )
+        return True
 
-    raise SlotNotFound("slot not found?")
+    raise SlotNotFound()
+
+
+@router.post(
+    "/webhook-netseasy",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(deps.neteasy_auth)],
+)
+async def netseasy_webhook(
+    webhook_event: schemas.WebhookEvent,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(deps.get_db),
+):
+    if webhook_event.event == "payment.checkout.completed":
+        await payment_succeeded(db, webhook_event.data["paymentId"], background_tasks)
+
+    elif webhook_event.event == "payment.charge.failed":
+        await payment_fail(db, webhook_event.data["paymentId"], background_tasks)
 
 
 @router.post("/stripe-webhook", response_model=dict, status_code=status.HTTP_200_OK)
@@ -105,33 +136,10 @@ async def stripe_event(
     event: stripe.Event = Depends(deps.get_stripe_webhook_event),
     db: AsyncSession = Depends(deps.get_db),
 ):
-    if event.type == "payment_intent.fail":
-        try:
-            user, _, product = await payment_fail(db, event.data.object)
-        except SlotNotFound:
-            pass
-        else:
-            await db.commit()
-            background_tasks.add_task(
-                send_transactional_email,
-                to_email=user.email,
-                template_id=MailTemplateEnum.PAYMENT_FAILED,
-                data={"product_name": product.name},
-            )
+    if event.type == "payment_intent.succeeded":
+        await payment_succeeded(db, event.data.object.id, background_tasks)
 
-    elif event.type == "payment_intent.succeeded":
-        try:
-            user, _, product = await payment_succeeded(db, event.data.object)
-        except SlotNotFound:
-            # TODO: log this?
-            pass
-        else:
-            await db.commit()
-            background_tasks.add_task(
-                send_transactional_email,
-                to_email=user.email,
-                template_id=MailTemplateEnum.PAYMENT_SUCCEEDED,
-                data={"product_name": product.name, "price": product.price},
-            )
+    elif event.type == "payment_intent.fail":
+        await payment_fail(db, event.data.object.id, background_tasks)
 
     return {"everything": "is awesome"}

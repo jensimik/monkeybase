@@ -18,3 +18,4 @@ from .page import Page
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate, UserUpdateMe
 from .webauthn import Webauthn, WebauthnCreate, WebauthnUpdate
+from .netseasy import WebhookEvent

@@ -111,7 +111,7 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
         sa.insert(models.Slot)
         .values(
             {
-                "stripe_id": fake.md5(),
+                "payment_id": fake.md5(),
                 "user_id": user_basic.id,
                 "product_id": 1,
                 "key": uuid.uuid4().hex,
