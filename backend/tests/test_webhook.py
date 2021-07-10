@@ -197,8 +197,6 @@ def test_nets_webhook_success(
 ):
     NETS_EVENT_COMPLETED["data"]["paymentId"] = slot_with_nets_id.payment_id
 
-    logger.info(NETS_EVENT_COMPLETED)
-
     headers = {"Authorization": f"Bearer {settings.NETS_EASY_WEBHOOK_SECRET}"}
     response = client.post(
         "/webhook/netseasy", headers=headers, json=NETS_EVENT_COMPLETED
