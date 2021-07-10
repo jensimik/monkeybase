@@ -20,6 +20,7 @@ async def create_nets_easy_payment_id(
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
+    """create a nets easy payment id"""
     if slot := await crud.slot.get(
         db,
         models.Slot.user_id == user.id,
@@ -52,6 +53,7 @@ async def slot_create_payment_intent(
     user: models.User = Security(deps.get_current_user, scopes=["basic"]),
     db: AsyncSession = Depends(deps.get_db),
 ):
+    """create a stripe payment intent"""
     if slot := await crud.slot.get(
         db,
         models.Slot.user_id == user.id,

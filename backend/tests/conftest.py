@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import random
 
 import pytest
 import sqlalchemy as sa
@@ -63,10 +64,12 @@ async def async_db(async_engine):
 @pytest.fixture(scope="session")
 def user_basic(db: sa.orm.Session):
     email = fake.email()
+    mobile = random.randint(4000, 999999)
     q = sa.insert(models.User).values(
         {
             "name": fake.name(),
             "email": email,
+            "mobile": f"+4542{mobile:06d}",
             "birthday": fake.date_of_birth(),
             "hashed_password": get_password_hash("basic"),
             "email_confirmed": True,
@@ -84,12 +87,14 @@ def user_basic(db: sa.orm.Session):
 @pytest.fixture(scope="session")
 def user_admin(db: sa.orm.Session):
     email = fake.email()
+    mobile = random.randint(4000, 999999)
     q = (
         sa.insert(models.User)
         .values(
             {
                 "name": fake.name(),
                 "email": email,
+                "mobile": f"+4542{mobile:06d}",
                 "birthday": fake.date_of_birth(),
                 "hashed_password": get_password_hash("admin"),
                 "email_confirmed": True,

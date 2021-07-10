@@ -74,6 +74,7 @@ def test_create_user(auth_client_admin: TestClient, client: TestClient):
     new_user_dict = {
         "name": faker.name(),
         "email": faker.email(),
+        "mobile": "+4581818181",
         "password": faker.password(),
         "birthday": faker.date_of_birth(),
     }
@@ -123,6 +124,7 @@ def test_signup(mock_mail_send, client: TestClient):
     new_user_dict = {
         "name": faker.name(),
         "email": faker.email(),
+        "mobile": "+4542808080",
         "password": faker.password(),
         "birthday": faker.date_of_birth(),
     }

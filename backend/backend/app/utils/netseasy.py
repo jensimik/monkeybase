@@ -10,16 +10,17 @@ headers = {
 }
 
 
-def create_payment_id(order_id, product, user):
+async def create_payment_id(order_id, product, user):
     human_name = HumanName(user.name)
     post_data = {
         "checkout": {
             "integrationType": "EmbeddedCheckout",
             "url": "https://monkey.gnerd.dk/checkout.html",
+            "termsUrl": "https://monkey.gnerd.dk/terms.html",
             "consumer": {
                 "email": user.email,
                 "phoneNumber": {
-                    "prefix": "0045",
+                    "prefix": "+45",
                     "number": user.mobile.replace("+45", ""),
                 },
                 "privatePerson": {
@@ -49,6 +50,7 @@ def create_payment_id(order_id, product, user):
                     "reference": f"product_id_{product.id}",
                     "name": product.name,
                     "quantity": 1,
+                    "unit": "pcs",
                     "unitPrice": product.price,
                     "grossTotalAmount": product.price,
                     "netTotalAmount": product.price,
@@ -65,10 +67,10 @@ def create_payment_id(order_id, product, user):
         json=post_data,
         timeout=(5, 10),
     )
-    if req.status_code == 200:
+    if req.status_code == 201:
         data = req.json()
         return data["paymentId"]
 
     raise Exception(
-        f"could not create payment_id server status code: {req.status_code}"
+        f"could not create payment_id server status code: {req.status_code} {req.text}"
     )

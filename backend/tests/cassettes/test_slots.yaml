@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: email=mwilson%40haynes-davis.net&name=Anthony+Mercado&metadata[user_id]=102
+    body: email=nochoa%40waters.com&name=Julie+Phillips&metadata[user_id]=100
     headers:
       Accept:
       - '*/*'
@@ -11,41 +11,40 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '75'
+      - '67'
       Content-Type:
       - application/x-www-form-urlencoded
       Idempotency-Key:
-      - 893c9050-f326-49ff-81b0-ef909cd8d11e
+      - 5465a977-3c99-4da9-b2b0-013e9e18b95e
       User-Agent:
       - Stripe/v1 PythonBindings/2.58.0
       X-Stripe-Client-User-Agent:
       - '{"bindings_version": "2.58.0", "lang": "python", "publisher": "stripe", "httplib":
-        "requests", "lang_version": "3.9.5", "platform": "Linux-5.12.10-arch1-1-x86_64-with-glibc2.33",
-        "uname": "Linux x280 5.12.10-arch1-1 #1 SMP PREEMPT Thu, 10 Jun 2021 16:34:50
+        "requests", "lang_version": "3.9.6", "platform": "Linux-5.12.14-arch1-1-x86_64-with-glibc2.33",
+        "uname": "Linux x280 5.12.14-arch1-1 #1 SMP PREEMPT Thu, 01 Jul 2021 07:26:06
         +0000 x86_64 "}'
     method: POST
     uri: https://api.stripe.com/v1/customers
   response:
     body:
-      string: "{\n  \"id\": \"cus_Jj67PVa39cawNR\",\n  \"object\": \"customer\",\n
-        \ \"address\": null,\n  \"balance\": 0,\n  \"created\": 1624484850,\n  \"currency\":
+      string: "{\n  \"id\": \"cus_JpJ86OymuXEMia\",\n  \"object\": \"customer\",\n
+        \ \"address\": null,\n  \"balance\": 0,\n  \"created\": 1625917146,\n  \"currency\":
         null,\n  \"default_source\": null,\n  \"delinquent\": false,\n  \"description\":
-        null,\n  \"discount\": null,\n  \"email\": \"mwilson@haynes-davis.net\",\n
-        \ \"invoice_prefix\": \"8EE7AC6F\",\n  \"invoice_settings\": {\n    \"custom_fields\":
-        null,\n    \"default_payment_method\": null,\n    \"footer\": null\n  },\n
-        \ \"livemode\": false,\n  \"metadata\": {\n    \"user_id\": \"102\"\n  },\n
-        \ \"name\": \"Anthony Mercado\",\n  \"next_invoice_sequence\": 1,\n  \"phone\":
-        null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\": null,\n  \"tax_exempt\":
-        \"none\"\n}\n"
+        null,\n  \"discount\": null,\n  \"email\": \"nochoa@waters.com\",\n  \"invoice_prefix\":
+        \"D41DB4BA\",\n  \"invoice_settings\": {\n    \"custom_fields\": null,\n    \"default_payment_method\":
+        null,\n    \"footer\": null\n  },\n  \"livemode\": false,\n  \"metadata\":
+        {\n    \"user_id\": \"100\"\n  },\n  \"name\": \"Julie Phillips\",\n  \"next_invoice_sequence\":
+        1,\n  \"phone\": null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\":
+        null,\n  \"tax_exempt\": \"none\"\n}\n"
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '625'
+      - '617'
       Content-Type:
       - application/json
       Date:
-      - Wed, 23 Jun 2021 21:47:30 GMT
+      - Sat, 10 Jul 2021 11:39:07 GMT
       Server:
       - nginx
       Strict-Transport-Security:
@@ -63,11 +62,11 @@ interactions:
       cache-control:
       - no-cache, no-store
       idempotency-key:
-      - 893c9050-f326-49ff-81b0-ef909cd8d11e
+      - 5465a977-3c99-4da9-b2b0-013e9e18b95e
       original-request:
-      - req_CuAz4BA9vQIu9L
+      - req_OwcHTmX2cMmZnZ
       request-id:
-      - req_CuAz4BA9vQIu9L
+      - req_OwcHTmX2cMmZnZ
       stripe-should-retry:
       - 'false'
       stripe-version:
@@ -78,7 +77,7 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: customer=cus_Jj67PVa39cawNR&statement_descriptor_suffix=Full+membership&amount=1000&currency=dkk&payment_method_types[0]=card&metadata[payment_for_product_id]=1&metadata[slot_id]=1
+    body: customer=cus_JpJ86OymuXEMia&statement_descriptor_suffix=Full+&amount=1000&currency=dkk&payment_method_types[0]=card&metadata[payment_for_product_id]=1&metadata[slot_id]=1
     headers:
       Accept:
       - '*/*'
@@ -89,34 +88,34 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '180'
+      - '170'
       Content-Type:
       - application/x-www-form-urlencoded
       Idempotency-Key:
-      - 9dad3e59-a6e7-4766-9091-984fe3772c14
+      - 528be4ef-e344-4276-a718-41d57fe39759
       User-Agent:
       - Stripe/v1 PythonBindings/2.58.0
       X-Stripe-Client-Telemetry:
-      - '{"last_request_metrics": {"request_id": "req_CuAz4BA9vQIu9L", "request_duration_ms":
-        475}}'
+      - '{"last_request_metrics": {"request_id": "req_OwcHTmX2cMmZnZ", "request_duration_ms":
+        520}}'
       X-Stripe-Client-User-Agent:
       - '{"bindings_version": "2.58.0", "lang": "python", "publisher": "stripe", "httplib":
-        "requests", "lang_version": "3.9.5", "platform": "Linux-5.12.10-arch1-1-x86_64-with-glibc2.33",
-        "uname": "Linux x280 5.12.10-arch1-1 #1 SMP PREEMPT Thu, 10 Jun 2021 16:34:50
+        "requests", "lang_version": "3.9.6", "platform": "Linux-5.12.14-arch1-1-x86_64-with-glibc2.33",
+        "uname": "Linux x280 5.12.14-arch1-1 #1 SMP PREEMPT Thu, 01 Jul 2021 07:26:06
         +0000 x86_64 "}'
     method: POST
     uri: https://api.stripe.com/v1/payment_intents
   response:
     body:
-      string: "{\n  \"id\": \"pi_1J5duwB3jLVglL0oeCWetUKa\",\n  \"object\": \"payment_intent\",\n
+      string: "{\n  \"id\": \"pi_1JBeWVB3jLVglL0o7GG5giTO\",\n  \"object\": \"payment_intent\",\n
         \ \"amount\": 1000,\n  \"amount_capturable\": 0,\n  \"amount_received\": 0,\n
         \ \"application\": null,\n  \"application_fee_amount\": null,\n  \"canceled_at\":
         null,\n  \"cancellation_reason\": null,\n  \"capture_method\": \"automatic\",\n
         \ \"charges\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\":
-        false,\n    \"total_count\": 0,\n    \"url\": \"/v1/charges?payment_intent=pi_1J5duwB3jLVglL0oeCWetUKa\"\n
-        \ },\n  \"client_secret\": \"pi_1J5duwB3jLVglL0oeCWetUKa_secret_nrylDzHDel9RrsvTrhkn164vt\",\n
-        \ \"confirmation_method\": \"automatic\",\n  \"created\": 1624484850,\n  \"currency\":
-        \"dkk\",\n  \"customer\": \"cus_Jj67PVa39cawNR\",\n  \"description\": null,\n
+        false,\n    \"total_count\": 0,\n    \"url\": \"/v1/charges?payment_intent=pi_1JBeWVB3jLVglL0o7GG5giTO\"\n
+        \ },\n  \"client_secret\": \"pi_1JBeWVB3jLVglL0o7GG5giTO_secret_MayBwarHKn0GBG2yUfPmNW03L\",\n
+        \ \"confirmation_method\": \"automatic\",\n  \"created\": 1625917147,\n  \"currency\":
+        \"dkk\",\n  \"customer\": \"cus_JpJ86OymuXEMia\",\n  \"description\": null,\n
         \ \"invoice\": null,\n  \"last_payment_error\": null,\n  \"livemode\": false,\n
         \ \"metadata\": {\n    \"payment_for_product_id\": \"1\",\n    \"slot_id\":
         \"1\"\n  },\n  \"next_action\": null,\n  \"on_behalf_of\": null,\n  \"payment_method\":
@@ -125,17 +124,17 @@ interactions:
         \   }\n  },\n  \"payment_method_types\": [\n    \"card\"\n  ],\n  \"receipt_email\":
         null,\n  \"review\": null,\n  \"setup_future_usage\": null,\n  \"shipping\":
         null,\n  \"source\": null,\n  \"statement_descriptor\": null,\n  \"statement_descriptor_suffix\":
-        \"Full membership\",\n  \"status\": \"requires_payment_method\",\n  \"transfer_data\":
+        \"Full\",\n  \"status\": \"requires_payment_method\",\n  \"transfer_data\":
         null,\n  \"transfer_group\": null\n}\n"
     headers:
       Connection:
       - keep-alive
       Content-Length:
-      - '1384'
+      - '1373'
       Content-Type:
       - application/json
       Date:
-      - Wed, 23 Jun 2021 21:47:30 GMT
+      - Sat, 10 Jul 2021 11:39:07 GMT
       Server:
       - nginx
       Strict-Transport-Security:
@@ -153,11 +152,11 @@ interactions:
       cache-control:
       - no-cache, no-store
       idempotency-key:
-      - 9dad3e59-a6e7-4766-9091-984fe3772c14
+      - 528be4ef-e344-4276-a718-41d57fe39759
       original-request:
-      - req_F5FdTCJE24HkVd
+      - req_DfrqS7t0vfHeBb
       request-id:
-      - req_F5FdTCJE24HkVd
+      - req_DfrqS7t0vfHeBb
       stripe-should-retry:
       - 'false'
       stripe-version:
@@ -167,4 +166,61 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: '{"checkout": {"integrationType": "EmbeddedCheckout", "url": "https://monkey.gnerd.dk/checkout.html",
+      "termsUrl": "https://monkey.gnerd.dk/terms.html", "consumer": {"email": "nochoa@waters.com",
+      "phoneNumber": {"prefix": "+45", "number": "42052480"}, "privatePerson": {"firstName":
+      "Julie", "lastName": "Phillips"}}, "merchantHandlesConsumerData": true}, "notifications":
+      {"webHooks": [{"eventName": "payment.checkout.completed", "url": "https://monkey.gnerd.dk/webhook-nets-easy",
+      "authorization": "thisisawebhooksecret"}, {"eventName": "payment.charge.failed",
+      "url": "https://monkey.gnerd.dk/webhook-nets-easy", "authorization": "thisisawebhooksecret"}]},
+      "order": {"items": [{"reference": "product_id_1", "name": "Melissa Moran", "quantity":
+      1, "unit": "pcs", "unitPrice": 1000, "grossTotalAmount": 1000, "netTotalAmount":
+      1000}], "amount": 1000, "currency": "DKK", "reference": "1"}}'
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Authorization:
+      - test-secret-key-3e69dceaed86494991b13ef270d212cc
+      CommercePlatformTag:
+      - monkeybase
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '887'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.25.1
+    method: POST
+    uri: https://test.api.dibspayment.eu/v1/payments
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAA/6tWKkiszE3NK/FMUbJSMjBINDQAAjODVEsLs2Rz88SURIu0JFPj5GTDpDQzA6Va
+        AD1WsUgwAAAA
+    headers:
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Sat, 10 Jul 2021 11:38:46 GMT
+      Set-Cookie:
+      - visid_incap_1967659=Z7D+4sokRfGDD0mnANeY19uG6WAAAAAAQUIPAAAAAAB7Nw2W2JA6RVaZXErMLcI9;
+        expires=Sat, 09 Jul 2022 11:57:26 GMT; HttpOnly; path=/; Domain=.api.dibspayment.eu
+      - incap_ses_727_1967659=tYalMDeuzGBa2klyBdMWCtuG6WAAAAAAGGGoJyALyOCLatq5V0xt6g==;
+        path=/; Domain=.api.dibspayment.eu
+      Transfer-Encoding:
+      - chunked
+      X-CDN:
+      - Imperva
+      X-Iinfo:
+      - 13-88696148-88696150 NNYN CT(48 40 0) RT(1625917146855 39) q(0 0 1 -1) r(2
+        2) U6
+    status:
+      code: 201
+      message: Created
 version: 1

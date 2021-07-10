@@ -28,11 +28,13 @@ async def seed_data():
         # create 100 users
         password_hash = get_password_hash("test")
         for x in range(1, 100):
+            mobile = random.randint(4000, 999999)
             await crud.user.create(
                 db,
                 {
                     "name": f"name {x}",
                     "email": f"test{x}@test.dk",
+                    "mobile": f"+4542{mobile:06d}",
                     "birthday": fake.date_of_birth(),
                     "hashed_password": password_hash,
                     "email_confirmed": True,

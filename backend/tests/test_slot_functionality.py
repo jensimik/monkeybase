@@ -27,6 +27,8 @@ def test_slots(auth_client_basic: TestClient):
 
     slot_key = data["key"]
 
+    # do stripe testing
+
     response = auth_client_basic.post(f"/slots/{slot_key}/create-payment-intent")
 
     assert response.status_code == status.HTTP_200_OK
@@ -34,6 +36,16 @@ def test_slots(auth_client_basic: TestClient):
     data = response.json()
 
     assert "secret" in data["client_secret"]
+
+    # do nets easy testing
+
+    response = auth_client_basic.post(f"/slots/{slot_key}/create-payment-id")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert "payment_id" in data
 
 
 def test_member(db, client, user_admin):
