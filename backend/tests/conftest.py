@@ -133,6 +133,29 @@ def slot_with_stripe_id(user_basic: models.User, db: sa.orm.Session):
     yield slot
 
 
+@pytest.fixture(scope="session")
+def slot_with_nets_id(user_basic: models.User, db: sa.orm.Session):
+    q = (
+        sa.insert(models.Slot)
+        .values(
+            {
+                "payment_id": fake.md5(),
+                "user_id": user_basic.id,
+                "product_id": 2,
+                "key": uuid.uuid4().hex,
+                "payment_status": PaymentStatusEnum.PENDING,
+                "reserved_until": datetime.datetime.utcnow()
+                + datetime.timedelta(hours=1),
+            }
+        )
+        .returning(models.Slot)
+    )
+    q = sa.select(models.Slot).from_statement(q)
+    slot = db.execute(q).scalar_one()
+    db.commit()
+    yield slot
+
+
 @pytest.fixture(scope="function")
 def client():
     yield TestClient(app)

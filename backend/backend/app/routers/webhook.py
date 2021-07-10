@@ -3,6 +3,7 @@ import datetime
 import stripe
 from dateutil.relativedelta import relativedelta
 from fastapi import APIRouter, BackgroundTasks, Depends, status
+from loguru import logger
 
 from .. import crud, deps, models, schemas
 from ..core.utils import MailTemplateEnum, send_transactional_email
@@ -51,6 +52,7 @@ async def payment_succeeded(db, payment_id, background_tasks):
         models.Slot.payment_status == PaymentStatusEnum.PENDING,
         for_update=True,
     ):
+        logger.info("found")
         user = await crud.user.get(db, models.User.id == slot.user_id)
         product = await crud.product.get(db, models.Product.id == slot.product_id)
         await crud.slot.update(
@@ -113,7 +115,7 @@ async def payment_succeeded(db, payment_id, background_tasks):
 
 
 @router.post(
-    "/webhook-netseasy",
+    "/netseasy",
     response_model=dict,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(deps.neteasy_auth)],
@@ -130,7 +132,7 @@ async def netseasy_webhook(
         await payment_fail(db, webhook_event.data["paymentId"], background_tasks)
 
 
-@router.post("/stripe-webhook", response_model=dict, status_code=status.HTTP_200_OK)
+@router.post("/stripe", response_model=dict, status_code=status.HTTP_200_OK)
 async def stripe_event(
     background_tasks: BackgroundTasks,
     event: stripe.Event = Depends(deps.get_stripe_webhook_event),

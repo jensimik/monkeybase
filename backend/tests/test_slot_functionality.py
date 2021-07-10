@@ -47,6 +47,11 @@ def test_slots(auth_client_basic: TestClient):
 
     assert "payment_id" in data
 
+    # no slot found == 404
+    for url in ["/slots/asdf/create-payment-intent", "/slots/asdf/create-payment-id"]:
+        response = auth_client_basic.post(url)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
 
 def test_member(db, client, user_admin):
 

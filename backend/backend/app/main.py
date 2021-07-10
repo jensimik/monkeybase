@@ -48,7 +48,7 @@ app.include_router(event.router, prefix="/events", tags=["event"])
 app.include_router(slot.router, prefix="/slots", tags=["slot"])
 app.include_router(member.router, prefix="/members", tags=["member"])
 app.include_router(door.router, tags=["door"])
-app.include_router(webhook.router, tags=["webhook"])
+app.include_router(webhook.router, prefix="/webhook", tags=["webhook"])
 app.include_router(misc.router, tags=["misc"])
 
 

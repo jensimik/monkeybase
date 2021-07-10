@@ -34,12 +34,12 @@ async def create_payment_id(order_id, product, user):
             "webHooks": [
                 {
                     "eventName": "payment.checkout.completed",
-                    "url": "https://monkey.gnerd.dk/webhook-nets-easy",
+                    "url": "https://monkey.gnerd.dk/webhook/netseasy",
                     "authorization": settings.NETS_EASY_WEBHOOK_SECRET,
                 },
                 {
                     "eventName": "payment.charge.failed",
-                    "url": "https://monkey.gnerd.dk/webhook-nets-easy",
+                    "url": "https://monkey.gnerd.dk/webhook/netseasy",
                     "authorization": settings.NETS_EASY_WEBHOOK_SECRET,
                 },
             ]

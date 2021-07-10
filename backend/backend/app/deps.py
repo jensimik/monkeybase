@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from . import crud, models, schemas
 from .core import security
 from .core.config import settings
-from .db import async_session, AsyncSession
+from .db import AsyncSession, async_session
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl="/auth/token",
@@ -43,7 +43,7 @@ async def get_http_session() -> AsyncIterator[aiohttp.ClientSession]:
 
 
 async def neteasy_auth(api_key: str = Security(netseasy_header)) -> str:
-    if api_key == settings.NETS_EASY_WEBHOOK_SECRET:
+    if api_key.credentials == settings.NETS_EASY_WEBHOOK_SECRET:
         return True
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
