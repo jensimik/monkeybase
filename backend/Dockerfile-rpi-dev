@@ -8,13 +8,13 @@ COPY ./gunicorn_conf.py /gunicorn_conf.py
 COPY ./start-reload.sh /start-reload.sh
 RUN chmod +x /start-reload.sh
 
-#WORKDIR /backend
-
 COPY ./requirements.txt requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./backend /backend
+
+WORKDIR /backend
 
 ENV PYTHONPATH=/backend
 

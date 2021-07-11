@@ -150,7 +150,7 @@ def test_signup(mock_mail_send, client: TestClient):
 
     # confirm the email
     confirm_token = generate_signup_confirm_token(email=new_user_dict["email"])
-    response = client.post(f"/auth/confirm_email/{confirm_token}")
+    response = client.post(f"/auth/confirm-email/{confirm_token}")
     assert response.status_code == status.HTTP_200_OK
 
     # test login this new user

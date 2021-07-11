@@ -14,12 +14,12 @@ from backend.app.db.base import engine
 def test_slots(auth_client_basic: TestClient):
 
     # no free slot in member_type 2 - return waiting list 429
-    response = auth_client_basic.post("/member_types/2/reserve-a-slot")
+    response = auth_client_basic.post("/member-types/2/reserve-a-slot")
 
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
     # get the free slot in member_type 1
-    response = auth_client_basic.post("/member_types/1/reserve-a-slot")
+    response = auth_client_basic.post("/member-types/1/reserve-a-slot")
 
     assert response.status_code == status.HTTP_200_OK
 

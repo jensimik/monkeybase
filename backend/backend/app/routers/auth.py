@@ -226,7 +226,7 @@ async def reset_password(
     )
 
 
-@router.post("/confirm_email/{confirm_token}")
+@router.post("/confirm-email/{confirm_token}")
 async def confirm_email(
     confirm_token: str,
     db: AsyncSession = Depends(deps.get_db),
