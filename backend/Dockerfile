@@ -3,11 +3,11 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8-slim
 
 RUN apt-get update && apt-get -y install git
 
-WORKDIR /app/
+#WORKDIR /backend
 
 COPY requirements.txt requirements.txt
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./backend /backend
 ENV PYTHONPATH=/backend
