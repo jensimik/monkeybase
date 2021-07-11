@@ -2,7 +2,7 @@
 set -e
 
 if [ -f /app/app/main.py ]; then
-    DEFAULT_MODULE_NAME=app.main
+    DEFAULT_MODULE_NAME=app.main:app
 elif [ -f /app/main.py ]; then
     DEFAULT_MODULE_NAME=main
 fi
