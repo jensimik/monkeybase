@@ -22,7 +22,7 @@ aiohttp[speedups]==3.7.4.post0
 
 # misc
 croniter==1.0.15
-tenacity==8.0.0
+tenacity==8.0.1
 python-dateutil==2.8.1
 loguru==0.5.3
 broadcaster[postgres]==0.2.0
