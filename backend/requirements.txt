@@ -23,7 +23,7 @@ aiohttp[speedups]==3.7.4.post0
 # misc
 croniter==1.0.15
 tenacity==8.0.1
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 loguru==0.5.3
 broadcaster[postgres]==0.2.0
 phonenumbers==8.12.27
@@ -58,7 +58,7 @@ pyasn1==0.4.8
 pycares==4.0.0
 pycparser==2.20
 pyparsing==2.4.7
-python-dateutil==2.8.1
+python-dateutil==2.8.2
 python-dotenv==0.18.0
 python-editor==1.0.4
 python-http-client==3.3.2
