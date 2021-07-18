@@ -28,6 +28,7 @@ loguru==0.5.3
 broadcaster[postgres]==0.2.0
 phonenumbers==8.12.27
 nameparser==1.0.6
+squares==1.0.0
 
 
 # sub dependencies speciefied for dependabot
