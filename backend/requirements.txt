@@ -13,7 +13,7 @@ itsdangerous==2.0.1
 # git+git://github.com/sqlalchemy/sqlalchemy.git@ee03c9e#egg=sqlalchemy
 sqlalchemy[postgresql_asyncpg,postgresql_psycopg2binary]==1.4.22
 alembic==1.6.5
-sqlakeyset==1.0.1626139718
+sqlakeyset==1.0.1628549850
 
 # integrations/api's
 stripe==2.60.0
