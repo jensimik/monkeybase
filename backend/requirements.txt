@@ -26,7 +26,7 @@ tenacity==8.0.1
 python-dateutil==2.8.2
 loguru==0.5.3
 broadcaster[postgres]==0.2.0
-phonenumbers==8.12.30
+phonenumbers==8.12.31
 nameparser==1.0.6
 squares==1.0.3
 
