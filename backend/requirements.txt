@@ -69,5 +69,5 @@ rsa==4.7.2
 six==1.16.0
 starkbank-ecdsa==1.1.1
 typing-extensions==3.10.0.2
-urllib3==1.26.6
+urllib3==1.26.7
 yarl==1.6.3
