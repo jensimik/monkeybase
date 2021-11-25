@@ -65,7 +65,7 @@ python-editor==1.0.4
 python-http-client==3.3.3
 python-multipart==0.0.5
 requests==2.26.0
-rsa==4.7.2
+rsa==4.8
 six==1.16.0
 starkbank-ecdsa==2.0.3
 typing-extensions==4.0.0
