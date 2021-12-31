@@ -1,4 +1,4 @@
-pydantic[email,dotenv]==1.8.2
+pydantic[email,dotenv]==1.9.0
 
 # security stuff
 python-jose==3.3.0
