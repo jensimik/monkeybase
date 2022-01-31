@@ -24,7 +24,7 @@ aiohttp[speedups]==3.8.1
 croniter==1.2.0
 tenacity==8.0.1
 python-dateutil==2.8.2
-loguru==0.5.3
+loguru==0.6.0
 broadcaster[postgres]==0.2.0
 phonenumbers==8.12.41
 nameparser==1.1.0
