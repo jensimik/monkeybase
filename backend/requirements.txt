@@ -17,7 +17,7 @@ sqlakeyset==1.0.1629029818
 
 # integrations/api's
 stripe==2.65.0
-sendgrid==6.9.5
+sendgrid==6.9.6
 aiohttp[speedups]==3.8.1
 
 # misc
