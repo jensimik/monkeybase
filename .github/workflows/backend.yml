@@ -44,7 +44,7 @@ jobs:
       with:
         python-version: 3.9
     - name: cache dependencies
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('backend/requirements.txt') }}-${{ hashFiles('backend/dev-requirements.txt') }}
