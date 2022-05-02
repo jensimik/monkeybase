@@ -45,7 +45,7 @@ cffi==1.15.0
 chardet==4.0.0
 dnspython==2.2.1
 ecdsa==0.17.0
-email-validator==1.2.0
+email-validator==1.2.1
 greenlet==1.1.2
 idna==3.3
 Mako==1.2.0
