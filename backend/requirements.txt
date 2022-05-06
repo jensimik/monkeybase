@@ -16,7 +16,7 @@ alembic==1.7.7
 sqlakeyset==1.0.1650280980
 
 # integrations/api's
-stripe==2.75.0
+stripe==2.76.0
 sendgrid==6.9.7
 aiohttp[speedups]==3.8.1
 
