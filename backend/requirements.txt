@@ -5,7 +5,7 @@ python-jose==3.3.0
 cryptography==37.0.2
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.5
-fido2==0.9.3
+fido2==1.0.0
 itsdangerous==2.1.2
 
 # db stuff
