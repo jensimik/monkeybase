@@ -2,7 +2,7 @@ pydantic[email,dotenv]==1.9.1
 
 # security stuff
 python-jose==3.3.0
-cryptography==37.0.2
+cryptography==37.0.3
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.5
 fido2==1.0.0
