@@ -48,7 +48,7 @@ ecdsa==0.17.0
 email-validator==1.2.1
 greenlet==1.1.2
 idna==3.3
-Mako==1.2.0
+Mako==1.2.1
 MarkupSafe==2.1.1
 multidict==6.0.2
 packaging==21.3
